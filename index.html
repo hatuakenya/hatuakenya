@@ -598,14 +598,14 @@
         } catch (e) { console.error("Config Load Error", e); }
     }
 
-    // 2. Auth Listener
+    // 2. Auth Listener (UPDATED: AUTO REDIRECT)
     onAuthStateChanged(auth, (user) => {
         currentUser = user;
         const signinBtn = document.querySelector('.signin-btn');
         if (signinBtn) {
             if (user) {
-                signinBtn.href = "dashboard.html";
-                signinBtn.innerHTML = '<i class="fas fa-user-check"></i><span>Dashboard</span>';
+                // User is signed in, redirect to dashboard
+                window.location.href = "dashboard.html";
             } else {
                 signinBtn.href = "signin.html";
                 signinBtn.innerHTML = '<i class="fas fa-user-circle"></i><span>Member Login</span>';
