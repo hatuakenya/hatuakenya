@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Member Login | Hatua Recruitment</title>
+    <meta name="description" content="Secure access to your professional dashboard.">
+    <meta name="theme-color" content="#1A1A1A">
+
+    <!-- PWA Manifest & Meta -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/images/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/images/icon-192.png">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* DYNAMIC VARIABLES (Hatua Branding) */
+            --primary-dark: #1A1A1A; /* Charcoal */
+            --primary-blue: #2C2C2C;
+            --accent-main: #D4AF37; /* Gold */
+            --accent-hover: #C5A028;
+            
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #F8FAFC;
+            --surface-white: #ffffff;
+            
+            --shadow-subtle: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-elevated: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+            --radius-lg: 24px;
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --transition: all 0.3s ease;
+            
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * {margin:0;padding:0;box-sizing:border-box;}
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-main);
+            background: url('assets/images/background.png') repeat, var(--bg-body);
+            background-size: 300px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ---- HEADER (Synced) ---- */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 15px 5%; position: fixed; top: 0; left: 0; right: 0;
+            z-index: 1000; box-shadow: var(--shadow-subtle); border-bottom: 1px solid rgba(0,0,0,0.03);
+        }
+        
+        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-container img { height: 40px; width: auto; }
+        .logo-text { font-size: 1.4rem; font-weight: 700; color: var(--primary-dark); font-family: 'Playfair Display', serif; }
+
+        /* ---- LOGIN SECTION ---- */
+        .auth-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 100px 20px 40px;
+        }
+
+        .auth-card {
+            background: var(--surface-white);
+            width: 100%;
+            max-width: 480px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-elevated);
+            padding: 40px;
+            border: 1px solid rgba(0,0,0,0.04);
+            border-top: 4px solid var(--accent-main); /* Gold Border Top */
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* NEW: Centered Logo inside Card */
+        .card-logo-wrapper {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .card-logo-wrapper img {
+            height: 70px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .auth-header { text-align: center; margin-bottom: 30px; }
+        .auth-title { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--primary-dark); margin-bottom: 10px; }
+        .auth-subtitle { color: var(--text-muted); font-size: 0.95rem; }
+
+        .form-group { margin-bottom: 20px; position: relative; }
+        .form-label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--primary-dark); font-size: 0.9rem; }
+        
+        .input-wrapper { position: relative; }
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            padding-right: 45px; /* Space for icon */
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: var(--transition);
+            background: #f8fafc;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-main);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
+        }
+
+        /* Eye Icon */
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.3s;
+        }
+        .toggle-password:hover { color: var(--primary-dark); }
+
+        .auth-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary-dark);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .auth-btn:hover { background: var(--accent-main); color: #fff; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .auth-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+        .divider {
+            margin: 25px 0;
+            text-align: center;
+            position: relative;
+        }
+        .divider::before {
+            content: ''; position: absolute; top: 50%; left: 0; right: 0;
+            height: 1px; background: #e2e8f0;
+        }
+        .divider span {
+            position: relative; background: #fff; padding: 0 15px;
+            color: var(--text-muted); font-size: 0.85rem;
+        }
+
+        .footer-links { text-align: center; margin-top: 20px; font-size: 0.9rem; color: var(--text-muted); }
+        .footer-links a { color: var(--primary-dark); text-decoration: none; font-weight: 700; border-bottom: 2px solid var(--accent-main); }
+        .footer-links a:hover { color: var(--accent-main); border-bottom-color: var(--primary-dark); }
+
+        /* Error Message */
+        #errorMessage {
+            color: #ef4444;
+            background: #fef2f2;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            display: none;
+            text-align: center;
+            border: 1px solid #fee2e2;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid #fff; border-radius: 50%;
+            animation: spin 1s linear infinite; display: none;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 480px) {
+            .auth-card { padding: 30px 20px; box-shadow: none; background: transparent; }
+            .auth-title { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <a href="index.html" class="logo-container">
+            <img src="assets/images/logo.png" alt="Logo" id="headerLogo">
+            <span class="logo-text" id="headerAppName">Hatua Recruitment</span>
+        </a>
+        <a href="signup.html" style="color: var(--primary-dark); font-weight: 600; text-decoration: none; font-size: 0.9rem;">
+            Create Account
+        </a>
+    </header>
+
+    <!-- LOGIN FORM -->
+    <div class="auth-container">
+        <div class="auth-card">
+            
+            <!-- LOGO ADDED HERE AS REQUESTED -->
+            <div class="card-logo-wrapper">
+                <img src="assets/images/logo.png" alt="Hatua Recruitment" id="cardLogo">
+            </div>
+
+            <div class="auth-header">
+                <h1 class="auth-title">Welcome Back</h1>
+                <p class="auth-subtitle">Sign in to access your professional dashboard.</p>
+            </div>
+
+            <div id="errorMessage"><i class="fas fa-exclamation-circle"></i> <span>Error message here</span></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <div class="input-wrapper">
+                        <input type="email" id="email" class="form-input" placeholder="name@example.com" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
+                        <i class="fas fa-eye toggle-password" id="togglePassword"></i>
+                    </div>
+                    <div style="text-align: right; margin-top: 8px;">
+                        <a href="reset-password.html" style="font-size: 0.85rem; color: var(--text-muted); text-decoration: none;">Forgot Password?</a>
+                    </div>
+                </div>
+
+                <button type="submit" class="auth-btn" id="submitBtn">
+                    <div class="spinner" id="spinner"></div>
+                    <span id="btnText">Sign In</span>
+                </button>
+            </form>
+
+            <div class="divider"><span>OR</span></div>
+
+            <div class="footer-links">
+                Don't have an account? <a href="signup.html">Join Hatua</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIREBASE & LOGIC -->
+    <script type="module">
+        import { auth, db } from './config.js'; 
+        import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
+        import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
+
+        const headerAppName = document.getElementById('headerAppName');
+
+        // 1. CONFIG LOADER (Sync with Master Admin)
+        async function loadAppConfig() {
+            try {
+                const brandSnap = await getDoc(doc(db, "settings", "branding"));
+                if (brandSnap.exists()) {
+                    const data = brandSnap.data();
+                    const appName = data.appName || 'Hatua Recruitment';
+                    
+                    document.title = `Login | ${appName}`;
+                    headerAppName.textContent = appName;
+
+                    if(data.primaryColor) {
+                        document.documentElement.style.setProperty('--primary-dark', data.primaryColor);
+                    }
+                    if(data.fontFamily) {
+                        document.documentElement.style.setProperty('--font-main', `${data.fontFamily}, sans-serif`);
+                    }
+                }
+            } catch (e) { console.error("Config Error", e); }
+        }
+
+        // Init Config
+        document.addEventListener('DOMContentLoaded', loadAppConfig);
+
+
+        // 2. Password Eye Toggle
+        const togglePassword = document.querySelector('#togglePassword');
+        const passwordInput = document.querySelector('#password');
+
+        if(togglePassword) {
+            togglePassword.addEventListener('click', function () {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+        }
+
+        // 3. Login Logic
+        const loginForm = document.getElementById('loginForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const spinner = document.getElementById('spinner');
+        const btnText = document.getElementById('btnText');
+        const errorMessage = document.getElementById('errorMessage');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Reset UI
+            errorMessage.style.display = 'none';
+            submitBtn.disabled = true;
+            spinner.style.display = 'block';
+            btnText.style.display = 'none';
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                // A. Firebase Login
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // B. Check Email Verification First
+                if (!user.emailVerified) {
+                    window.location.href = "verify.html";
+                    return; // Stop further execution
+                }
+
+                // C. Check Role in Firestore
+                const userDocRef = doc(db, "users", user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+
+                // D. Redirect Logic
+                const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+                
+                if(redirectUrl) {
+                    sessionStorage.removeItem('redirectAfterLogin');
+                    window.location.href = redirectUrl;
+                } else if (userDocSnap.exists()) {
+                    const userData = userDocSnap.data();
+                    if (userData.role === 'admin') {
+                        window.location.href = "admin-dashboard.html";
+                    } else {
+                        window.location.href = "dashboard.html";
+                    }
+                } else {
+                    // Fallback
+                    window.location.href = "dashboard.html";
+                }
+
+            } catch (error) {
+                console.error("Login error:", error);
+                errorMessage.style.display = 'block';
+                
+                // User-friendly error messages
+                let msg = "Failed to sign in. Please check your credentials.";
+                if(error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') msg = "Invalid email or password.";
+                if(error.code === 'auth/wrong-password') msg = "Invalid email or password.";
+                if(error.code === 'auth/too-many-requests') msg = "Too many failed attempts. Try again later.";
+                
+                errorMessage.querySelector('span').textContent = msg;
+                
+                // Reset Button
+                submitBtn.disabled = false;
+                spinner.style.display = 'none';
+                btnText.style.display = 'block';
+            }
+        });
+    </script>
+
+</body>
+</html>

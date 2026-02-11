@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>System Logs | Hatua Admin</title>
+    <meta name="theme-color" content="#1A1A1A">
+
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/images/icon-192.png">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        :root {
+            /* HATUA BRANDING */
+            --primary-dark: #1A1A1A;    /* Charcoal */
+            --primary-light: #F8FAFC;   /* Off-white background */
+            --accent-gold: #D4AF37;     /* Gold */
+            --accent-gold-dim: #F9F1D8; /* Light Gold BG */
+            
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #F8FAFC;
+            --surface-white: #ffffff;
+            
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            
+            /* Log Specific Colors */
+            --log-info-bg: #F1F5F9;     --log-info-text: #475569;
+            --log-warn-bg: #FFF7ED;     --log-warn-text: #D97706;
+            --log-error-bg: #FEF2F2;    --log-error-text: #DC2626;
+            --log-sec-bg: #1A1A1A;      --log-sec-text: #D4AF37; /* Security logs are Gold on Black */
+
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-main);
+            background: url('assets/images/background.png') repeat, var(--bg-body);
+            background-size: 300px;
+            min-height: 100vh;
+            padding-bottom: 40px; 
+            overflow-x: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        /* ---- HEADER ---- */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--glass-bg); backdrop-filter: blur(12px);
+            padding: 10px 5%; height: 70px;
+            z-index: 1000; box-shadow: var(--shadow-sm); border-bottom: 1px solid rgba(0,0,0,0.03);
+            position: fixed; top: 0; left: 0; right: 0;
+        }
+
+        .logo-con { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-con img { height: 35px; width: auto; }
+        .logo-text { font-size: 1.2rem; font-weight: 700; color: var(--primary-dark); font-family: 'Playfair Display', serif; }
+        .badge-admin { 
+            background: var(--primary-dark); color: var(--accent-gold); border: 1px solid var(--accent-gold);
+            padding: 2px 8px; border-radius: 4px; font-size: 0.6rem; font-weight: 700; 
+            text-transform: uppercase; margin-left: 5px; letter-spacing: 1px;
+        }
+
+        /* ---- HAMBURGER MENU ---- */
+        .hamburger-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(26, 26, 26, 0.05); color: var(--primary-dark);
+            border: none; cursor: pointer; display: grid; place-items: center;
+            font-size: 1.2rem; transition: var(--transition);
+            position: relative; z-index: 1002;
+        }
+        .hamburger-btn:hover { background: rgba(212, 175, 55, 0.1); color: var(--accent-gold); transform: rotate(90deg); }
+        
+        /* Menu Overlay & Drawer */
+        .menu-overlay {
+            position: fixed; inset: 0; background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(4px); z-index: 2000; opacity: 0; pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .menu-overlay.active { opacity: 1; pointer-events: all; }
+
+        .side-drawer {
+            position: fixed; top: 0; right: 0; bottom: 0;
+            width: 85%; max-width: 320px;
+            background: #fff; z-index: 2001;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column;
+            border-left: 4px solid var(--accent-gold);
+        }
+        .side-drawer.active { transform: translateX(0); }
+
+        .drawer-header { 
+            padding: 30px 25px 25px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 15px; 
+            background: #fff;
+        }
+        .drawer-avatar { width: 50px; height: 50px; background: var(--primary-dark); color: var(--accent-gold); border-radius: 50%; display: grid; place-items: center; font-size: 1.2rem; font-weight: 700; border: 2px solid var(--accent-gold); }
+        .drawer-user h4 { font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 2px; font-weight: 700; }
+        .drawer-user p { font-size: 0.75rem; color: var(--accent-gold); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+        .drawer-links { padding: 20px 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .drawer-item { 
+            padding: 12px 20px; border-radius: 12px; text-decoration: none; color: #475569; 
+            font-weight: 600; display: flex; align-items: center; gap: 15px; transition: 0.2s; font-size: 0.95rem;
+        }
+        .drawer-item i { width: 20px; text-align: center; color: #94a3b8; transition: 0.2s; font-size: 1.1rem; }
+        
+        .drawer-item:hover, .drawer-item.active { background: var(--accent-gold-dim); color: var(--primary-dark); }
+        .drawer-item:hover i, .drawer-item.active i { color: var(--accent-gold); }
+        .drawer-item.active { border: 1px solid rgba(212, 175, 55, 0.2); }
+
+        .drawer-footer { padding: 20px 25px; border-top: 1px solid #f1f5f9; background: #fff; }
+        .drawer-logout { 
+            width: 100%; padding: 14px; background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2;
+            border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; 
+            justify-content: center; gap: 10px; transition: 0.2s; font-family: var(--font-main);
+        }
+        .drawer-logout:hover { background: #fee2e2; border-color: #fecaca; }
+
+        /* CONTENT */
+        .container { margin-top: 90px; padding: 0 5%; max-width: 1200px; margin-left: auto; margin-right: auto; }
+        .page-header { margin-bottom: 30px; animation: slideUp 0.4s ease-out; }
+        .page-title { font-size: 2rem; font-family: 'Playfair Display', serif; color: var(--primary-dark); font-weight: 700; margin-bottom: 8px; }
+        .page-sub { color: #64748b; font-size: 1rem; }
+
+        /* Controls */
+        .controls { 
+            background: white; padding: 20px; border-radius: 20px; box-shadow: var(--shadow-sm); 
+            display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 30px; align-items: center; 
+            animation: slideUp 0.5s ease-out; border: 1px solid rgba(0,0,0,0.04); border-left: 6px solid var(--accent-gold); 
+        }
+        
+        .search-wrap { flex: 1; min-width: 240px; position: relative; }
+        .search-wrap i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+        .inp-search { 
+            width: 100%; padding: 16px 18px 16px 45px; border-radius: 12px; border: 1px solid #cbd5e1; 
+            outline: none; background: #f8fafc; font-family: inherit; font-size: 0.95rem; transition: 0.2s; 
+        }
+        .inp-search:focus { border-color: var(--accent-gold); background: #fff; box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); }
+        
+        .sel-filter { 
+            padding: 16px; border-radius: 12px; border: 1px solid #cbd5e1; background: #f8fafc; 
+            outline: none; font-size: 0.95rem; cursor: pointer; font-family: inherit; transition: 0.2s; min-width: 150px; 
+        }
+        .sel-filter:focus { border-color: var(--accent-gold); background: #fff; }
+        
+        .action-btns { display: flex; gap: 10px; flex: 1; justify-content: flex-end; }
+        .btn-act { 
+            padding: 14px 24px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; 
+            display: flex; align-items: center; gap: 10px; font-size: 0.9rem; transition: 0.2s; 
+            white-space: nowrap; font-family: var(--font-main); 
+        }
+        .btn-ref { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+        .btn-ref:hover { background: var(--primary-dark); color: white; }
+        
+        .btn-export { 
+            background: var(--primary-dark); color: var(--accent-gold); box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid var(--primary-dark);
+        }
+        .btn-export:hover { transform: translateY(-2px); background: #000; box-shadow: 0 8px 25px rgba(0,0,0,0.2); border-color: var(--accent-gold); }
+
+        /* Table Style */
+        .logs-wrapper { 
+            background: white; border-radius: 24px; box-shadow: var(--shadow-sm); overflow: hidden; 
+            border: 1px solid rgba(0,0,0,0.05); animation: slideUp 0.6s ease-out; 
+        }
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        
+        th { 
+            text-align: left; padding: 20px 25px; background: #f8fafc; color: #64748b; 
+            font-size: 0.75rem; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; border-bottom: 1px solid #e2e8f0; 
+        }
+        td { padding: 22px 25px; border-bottom: 1px solid #f1f5f9; vertical-align: top; font-size: 0.95rem; color: #334155; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fdfdfd; }
+
+        .log-badge { display: inline-block; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 0.7rem; letter-spacing: 0.5px; text-transform: uppercase; }
+        .badge-info { background: var(--log-info-bg); color: var(--log-info-text); }
+        .badge-warn { background: var(--log-warn-bg); color: var(--log-warn-text); }
+        .badge-error { background: var(--log-error-bg); color: var(--log-error-text); }
+        .badge-security { background: var(--log-sec-bg); color: var(--log-sec-text); border: 1px solid var(--accent-gold); }
+
+        .log-meta { display: flex; flex-direction: column; gap: 4px; }
+        .log-date { font-weight: 700; color: var(--primary-dark); }
+        .log-time { font-size: 0.8rem; color: #94a3b8; }
+
+        .log-user { display: flex; align-items: center; gap: 12px; }
+        .user-av { 
+            width: 36px; height: 36px; border-radius: 10px; background: var(--primary-dark); 
+            color: var(--accent-gold); display: grid; place-items: center; font-size: 0.9rem; font-weight: 700; 
+        }
+        
+        .log-action strong { color: var(--primary-dark); display: block; margin-bottom: 4px; font-size: 1rem; }
+        .log-action span { color: #64748b; font-size: 0.9rem; line-height: 1.5; display: block; max-width: 400px; }
+
+        .ip-badge {
+            font-family: monospace; background: #f1f5f9; padding: 4px 10px; border-radius: 6px; 
+            font-size: 0.85rem; border: 1px solid #e2e8f0; color: #475569;
+        }
+
+        .load-more-btn { 
+            background: white; border: 1px solid #cbd5e1; padding: 14px 30px; border-radius: 50px; 
+            cursor: pointer; color: #64748b; font-weight: 700; margin-top: 30px; display: block; 
+            margin-left: auto; margin-right: auto; transition: 0.2s; box-shadow: var(--shadow-sm); 
+            font-family: var(--font-main); 
+        }
+        .load-more-btn:hover { border-color: var(--accent-gold); color: var(--primary-dark); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+        #page-loader { position: fixed; inset: 0; background: #fff; z-index: 2000; display: flex; justify-content: center; align-items: center; }
+        .spinner { width: 45px; height: 45px; border: 4px solid #e2e8f0; border-top: 4px solid var(--accent-gold); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media(max-width: 600px) { .controls { flex-direction: column; align-items: stretch; gap: 15px; } .search-wrap i { top: 24px; } .action-btns { justify-content: space-between; } }
+    </style>
+</head>
+<body>
+
+    <div id="page-loader"><div class="spinner"></div></div>
+
+    <!-- HEADER -->
+    <header id="header">
+        <a href="admin-dashboard.html" class="logo-con">
+            <img src="assets/images/logo.png" alt="Logo">
+            <span class="logo-text">Hatua</span>
+            <span class="badge-admin">Admin</span>
+        </a>
+        <button class="hamburger-btn" id="menuTrigger">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- DRAWER -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+    <aside class="side-drawer" id="sideDrawer">
+        <div class="drawer-header">
+            <div class="drawer-avatar" id="drawerAvatar">A</div>
+            <div class="drawer-user">
+                <h4 id="drawerName">Admin</h4>
+                <p>Security Auditor</p>
+            </div>
+        </div>
+        
+        <!-- UPDATED NAVIGATION -->
+        <div class="drawer-links">
+            <a href="admin-dashboard.html" class="drawer-item"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="admin-users.html" class="drawer-item"><i class="fas fa-users"></i> Manage Users</a>
+            <a href="admin-apps.html" class="drawer-item"><i class="fas fa-clipboard-list"></i> Applications</a>
+            <a href="admin-testimonials.html" class="drawer-item"><i class="fas fa-comment-alt"></i> Testimonials</a>
+            <a href="admin-post-job.html" class="drawer-item"><i class="fas fa-plus-circle"></i> Post Job</a>
+            <a href="admin-manage-job.html" class="drawer-item"><i class="fas fa-briefcase"></i> Manage Jobs</a>
+            <a href="admin-support.html" class="drawer-item"><i class="fas fa-headset"></i> Support</a>
+            <a href="admin-settings.html" class="drawer-item"><i class="fas fa-cogs"></i> Master Settings</a>
+            <a href="admin-logs.html" class="drawer-item active"><i class="fas fa-list-alt"></i> Logs</a>
+            <a href="admin-reports.html" class="drawer-item"><i class="fas fa-chart-line"></i> Analytics</a>
+            <a href="admin-profile.html" class="drawer-item"><i class="fas fa-user-circle"></i> Profile</a>
+        </div>
+
+        <div class="drawer-footer">
+            <button id="logoutBtn" class="drawer-logout">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Audit Logs</h1>
+            <p class="page-sub">Monitor system events, user activity, and security alerts.</p>
+        </div>
+
+        <div class="controls">
+            <div class="search-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text" class="inp-search" id="searchInput" placeholder="Search by user, action, or details...">
+            </div>
+            <select class="sel-filter" id="typeFilter">
+                <option value="all">All Levels</option>
+                <option value="INFO">Info</option>
+                <option value="WARNING">Warning</option>
+                <option value="ERROR">Error</option>
+                <option value="SECURITY">Security</option>
+            </select>
+            <div class="action-btns">
+                <button class="btn-act btn-ref" id="refreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
+                <button class="btn-act btn-export" id="exportBtn"><i class="fas fa-file-pdf"></i> Report</button>
+            </div>
+        </div>
+
+        <div class="logs-wrapper">
+            <div class="table-responsive">
+                <table id="logsTable">
+                    <thead><tr><th>Level</th><th>Timestamp</th><th>User / Actor</th><th>Activity Details</th><th>Source IP</th></tr></thead>
+                    <tbody id="logsBody"></tbody>
+                </table>
+            </div>
+            <div id="emptyState" style="display:none; text-align:center; padding:50px; color:#94a3b8; background:#fdfdfd;">
+                <i class="fas fa-clipboard-check" style="font-size:2rem; margin-bottom:10px; opacity:0.5;"></i>
+                <p>No log records found matching your criteria.</p>
+            </div>
+        </div>
+        
+        <button id="loadMoreBtn" class="load-more-btn">Load Older Records</button>
+    </div>
+
+    <script type="module">
+        import { auth, db } from './config.js'; 
+        import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
+        import { collection, query, orderBy, limit, getDocs, startAfter, getDoc, doc } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
+
+        // 1. DRAWER LOGIC
+        const menuTrigger = document.getElementById('menuTrigger');
+        const sideDrawer = document.getElementById('sideDrawer');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const drawerName = document.getElementById('drawerName');
+        const drawerAvatar = document.getElementById('drawerAvatar');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        function toggleDrawer() {
+            sideDrawer.classList.toggle('active');
+            menuOverlay.classList.toggle('active');
+        }
+        menuTrigger.addEventListener('click', toggleDrawer);
+        menuOverlay.addEventListener('click', toggleDrawer);
+        document.querySelectorAll('.drawer-item').forEach(l => l.addEventListener('click', toggleDrawer));
+
+        logoutBtn.addEventListener('click', async () => {
+            await signOut(auth);
+            window.location.href = "signin.html";
+        });
+
+        // 2. LOGS LOGIC
+        const logsBody = document.getElementById('logsBody');
+        const loader = document.getElementById('page-loader');
+        const searchInput = document.getElementById('searchInput');
+        const typeFilter = document.getElementById('typeFilter');
+        const emptyState = document.getElementById('emptyState');
+        
+        let lastDoc = null, currentLogs = [];
+        let currentUserEmail = "";
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists() && (userDoc.data().role === 'admin' || userDoc.data().isAdmin)) {
+                    const data = userDoc.data();
+                    drawerName.textContent = data.fullName || "Admin";
+                    drawerAvatar.textContent = (data.fullName || 'A').charAt(0).toUpperCase();
+                    currentUserEmail = user.email;
+
+                    await fetchLogs(true);
+                    loader.style.display = 'none';
+                } else { window.location.href = "signin.html"; }
+            } else { window.location.href = "signin.html"; }
+        });
+
+        async function fetchLogs(isInitial = false) {
+            try {
+                if(isInitial) { logsBody.innerHTML = ''; currentLogs = []; lastDoc = null; }
+                
+                let q = query(collection(db, "system_logs"), orderBy("timestamp", "desc"), limit(25));
+                if (lastDoc && !isInitial) q = query(collection(db, "system_logs"), orderBy("timestamp", "desc"), startAfter(lastDoc), limit(25));
+
+                const snap = await getDocs(q);
+                if (snap.empty) {
+                    if(isInitial) { emptyState.style.display = 'block'; document.getElementById('logsTable').style.display='none'; }
+                    document.getElementById('loadMoreBtn').style.display = 'none';
+                    return;
+                }
+                
+                emptyState.style.display = 'none';
+                document.getElementById('logsTable').style.display = 'table';
+                
+                lastDoc = snap.docs[snap.docs.length-1];
+                snap.forEach(doc => {
+                    const log = doc.data();
+                    currentLogs.push(log);
+                    renderRow(log);
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        function renderRow(log) {
+            const dateObj = log.timestamp ? new Date(log.timestamp.seconds*1000) : new Date();
+            const dateStr = dateObj.toLocaleDateString();
+            const timeStr = dateObj.toLocaleTimeString();
+
+            let badgeClass = 'badge-info';
+            if(log.level === 'WARNING') badgeClass = 'badge-warn';
+            if(log.level === 'ERROR') badgeClass = 'badge-error';
+            if(log.level === 'SECURITY') badgeClass = 'badge-security';
+
+            const userInit = (log.userName || '?').charAt(0).toUpperCase();
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><span class="log-badge ${badgeClass}">${log.level || 'INFO'}</span></td>
+                <td>
+                    <div class="log-meta">
+                        <span class="log-date">${dateStr}</span>
+                        <span class="log-time">${timeStr}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="log-user">
+                        <div class="user-av">${userInit}</div>
+                        <span style="font-weight:600; font-size:0.9rem;">${log.userName || 'System'}</span>
+                    </div>
+                </td>
+                <td class="log-action">
+                    <strong>${log.action}</strong>
+                    <span>${log.details||'No details provided'}</span>
+                </td>
+                <td><span class="ip-badge">${log.ip || '127.0.0.1'}</span></td>
+            `;
+            logsBody.appendChild(row);
+        }
+
+        // Search & Filter
+        function filter() {
+            const term = searchInput.value.toLowerCase();
+            const type = typeFilter.value;
+            logsBody.innerHTML = '';
+            
+            const filtered = currentLogs.filter(l => {
+                const matchTerm = (l.userName||'').toLowerCase().includes(term) || (l.action||'').toLowerCase().includes(term) || (l.details||'').toLowerCase().includes(term);
+                const matchType = type === 'all' || l.level === type;
+                return matchTerm && matchType;
+            });
+
+            if(filtered.length === 0) {
+                emptyState.style.display = 'block';
+                document.getElementById('logsTable').style.display = 'none';
+            } else {
+                emptyState.style.display = 'none';
+                document.getElementById('logsTable').style.display = 'table';
+                filtered.forEach(renderRow);
+            }
+        }
+
+        searchInput.addEventListener('input', filter);
+        typeFilter.addEventListener('change', filter);
+        document.getElementById('loadMoreBtn').addEventListener('click', () => fetchLogs(false));
+        document.getElementById('refreshBtn').addEventListener('click', () => fetchLogs(true));
+
+        // Export PDF
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l'); // Landscape for logs
+
+            // Header
+            doc.setFillColor(26, 26, 26); // Charcoal
+            doc.rect(0, 0, 297, 30, 'F');
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.setTextColor(212, 175, 55); // Gold
+            doc.text("Hatua Audit Logs", 14, 18);
+            
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            doc.setTextColor(255, 255, 255);
+            doc.text(`Generated by: ${currentUserEmail} | ${new Date().toLocaleString()}`, 14, 25);
+
+            const rows = currentLogs.map(l => [
+                l.level,
+                l.timestamp ? new Date(l.timestamp.seconds*1000).toLocaleString() : '-',
+                l.userName,
+                l.action,
+                l.details,
+                l.ip
+            ]);
+
+            doc.autoTable({ 
+                startY: 40,
+                head: [['Level', 'Timestamp', 'User', 'Action', 'Details', 'IP']], 
+                body: rows,
+                theme: 'striped',
+                headStyles: { fillColor: [26, 26, 26] }, // Hatua Charcoal
+                styles: { fontSize: 8, cellPadding: 4 }
+            });
+
+            doc.save('Hatua_Audit_Logs.pdf');
+        });
+    </script>
+</body>
+</html>

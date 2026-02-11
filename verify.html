@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Verify Email | Hatua Recruitment</title>
+    <meta name="description" content="Please verify your email address to continue.">
+    <meta name="theme-color" content="#1A1A1A">
+
+    <!-- PWA Manifest & Meta -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/images/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/images/icon-192.png">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* DYNAMIC VARIABLES (Hatua Branding) */
+            --primary-dark: #1A1A1A; /* Charcoal */
+            --primary-blue: #2C2C2C;
+            --accent-main: #D4AF37; /* Gold */
+            --accent-hover: #C5A028;
+            
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #F8FAFC;
+            --surface-white: #ffffff;
+            
+            --shadow-subtle: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-elevated: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0,0,0,0.01);
+            --radius-lg: 24px;
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --success-green: #10b981;
+            --warning-amber: #f59e0b;
+            
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * {margin:0;padding:0;box-sizing:border-box;}
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-main);
+            background: url('assets/images/background.png') repeat, var(--bg-body);
+            background-size: 300px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* ---- HEADER (Synced) ---- */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            padding: 15px 5%; position: fixed; top: 0; left: 0; right: 0;
+            z-index: 1000; box-shadow: var(--shadow-subtle); border-bottom: 1px solid rgba(0,0,0,0.03);
+        }
+        
+        .logo-container { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .logo-container img { height: 40px; width: auto; }
+        .logo-text { font-size: 1.5rem; font-weight: 700; color: var(--primary-dark); font-family: 'Playfair Display', serif; letter-spacing: -0.5px; }
+
+        /* ---- VERIFY SECTION ---- */
+        .auth-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 20px 40px;
+        }
+
+        .auth-card {
+            background: var(--surface-white);
+            width: 100%;
+            max-width: 480px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-elevated);
+            padding: 45px 40px;
+            border: 1px solid rgba(0,0,0,0.04);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Top Accent Line */
+        .auth-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: var(--accent-main);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Progress Steps */
+        .steps-container {
+            display: flex; justify-content: center; gap: 8px; margin-bottom: 35px;
+        }
+        .step-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: #e2e8f0;
+        }
+        .step-dot.active { background: var(--accent-main); width: 24px; border-radius: 4px; transition: width 0.3s ease; }
+
+        .mail-icon-wrapper {
+            width: 90px; height: 90px;
+            background: rgba(212, 175, 55, 0.05); /* Soft Gold */
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 25px;
+            position: relative;
+            border: 1px solid rgba(212, 175, 55, 0.1);
+        }
+        .mail-icon-wrapper i { font-size: 2.8rem; color: var(--accent-main); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+        
+        /* Pulse Animation */
+        .pulse-ring {
+            position: absolute; width: 100%; height: 100%; border-radius: 50%;
+            border: 2px solid var(--accent-main); opacity: 0;
+            animation: pulse 2.5s infinite cubic-bezier(0.4, 0, 0.6, 1);
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.4; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }
+
+        .auth-title { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--primary-dark); margin-bottom: 12px; letter-spacing: -0.5px; }
+        .auth-subtitle { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 30px; }
+        .email-highlight { 
+            color: var(--primary-dark); font-weight: 700; background: #f8fafc; 
+            padding: 4px 10px; border-radius: 6px; border: 1px solid #e2e8f0; display: inline-block; margin-top: 5px;
+        }
+
+        /* Spam Warning Box */
+        .spam-notice {
+            background: #FFFBEB;
+            border: 1px solid #FEF3C7;
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 0.85rem;
+            color: #92400E;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            text-align: left;
+            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.05);
+        }
+        .spam-notice i { margin-top: 2px; color: var(--warning-amber); font-size: 1rem; }
+
+        .action-buttons {
+            display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px;
+        }
+
+        .btn {
+            width: 100%; padding: 16px; border-radius: 14px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+            transition: var(--transition); display: flex;
+            justify-content: center; align-items: center; gap: 10px; text-decoration: none;
+            letter-spacing: 0.3px; position: relative; overflow: hidden;
+        }
+
+        .btn-primary {
+            background: var(--primary-dark); color: #fff; border: none;
+            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.2);
+        }
+        .btn-primary:hover { 
+            background: var(--accent-main); color: #fff; transform: translateY(-2px); 
+            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.25); 
+        }
+
+        .btn-outline {
+            background: transparent; color: var(--text-muted); border: 1.5px solid #e2e8f0;
+        }
+        .btn-outline:hover { border-color: var(--primary-dark); color: var(--primary-dark); background: #f8fafc; }
+        .btn-outline:disabled { opacity: 0.6; cursor: not-allowed; border-color: #e2e8f0; color: #94a3b8; background: #f1f5f9; }
+
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 16px; background: #F8FAFC; color: var(--text-muted);
+            border-radius: 30px; font-size: 0.8rem; font-weight: 600;
+            margin-bottom: 25px; border: 1px solid #e2e8f0;
+            transition: var(--transition);
+        }
+        .status-badge.verified { background: #ECFDF5; color: #059669; border-color: #A7F3D0; box-shadow: 0 2px 5px rgba(16, 185, 129, 0.1); }
+
+        .spinner-sm {
+            width: 16px; height: 16px; border: 2px solid rgba(0,0,0,0.1);
+            border-top: 2px solid var(--accent-main); border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .footer-actions {
+            display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); 
+            border-top: 1px solid #f1f5f9; padding-top: 25px; margin-top: 10px;
+        }
+        .footer-link { color: var(--text-main); text-decoration: none; font-weight: 600; cursor: pointer; transition: color 0.2s; }
+        .footer-link:hover { color: var(--accent-main); text-decoration: underline; }
+
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <a href="index.html" class="logo-container">
+            <img src="assets/images/logo.png" alt="Logo" id="headerLogo">
+            <span class="logo-text" id="headerAppName">Hatua Recruitment</span>
+        </a>
+    </header>
+
+    <!-- VERIFY CONTENT -->
+    <div class="auth-container">
+        <div class="auth-card">
+            
+            <!-- Step Indicator -->
+            <div class="steps-container">
+                <div class="step-dot"></div>
+                <div class="step-dot"></div>
+                <div class="step-dot active"></div>
+            </div>
+
+            <div class="mail-icon-wrapper">
+                <div class="pulse-ring"></div>
+                <i class="fas fa-envelope-open-text"></i>
+            </div>
+
+            <div class="status-badge" id="statusBadge">
+                <div class="spinner-sm"></div>
+                <span>Waiting for verification...</span>
+            </div>
+
+            <h1 class="auth-title">Verify Your Email</h1>
+            
+            <p class="auth-subtitle">
+                We've sent a secure verification link to <br>
+                <span class="email-highlight" id="userEmail">loading...</span><br>
+                Please check your inbox and click the link to continue.
+            </p>
+
+            <!-- Spam Warning Note -->
+            <div class="spam-notice">
+                <i class="fas fa-info-circle"></i>
+                <div>
+                    <strong>Can't find it?</strong><br>
+                    Check your <strong>Spam</strong> or <strong>Junk</strong> folder. Sometimes important emails hide there.
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <!-- Smart Mail Button -->
+                <a href="#" id="openMailBtn" class="btn btn-primary" target="_blank">
+                    <i class="fas fa-envelope"></i> Open Email App
+                </a>
+                
+                <!-- Resend Button -->
+                <button id="resendBtn" class="btn btn-outline" disabled>
+                    <i class="fas fa-redo-alt"></i> 
+                    <span id="resendText">Resend Email in 15s</span>
+                </button>
+            </div>
+
+            <div class="footer-actions">
+                <span>Wrong address? <a href="#" id="logoutBtn" class="footer-link">Log out</a></span>
+                <a href="contact.html" class="footer-link">Need Help?</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIREBASE & LOGIC -->
+    <script type="module">
+        import { auth, db } from './config.js'; 
+        import { onAuthStateChanged, sendEmailVerification, signOut, reload } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
+        import { doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
+
+        const userEmailEl = document.getElementById('userEmail');
+        const openMailBtn = document.getElementById('openMailBtn');
+        const resendBtn = document.getElementById('resendBtn');
+        const resendText = document.getElementById('resendText');
+        const statusBadge = document.getElementById('statusBadge');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const headerAppName = document.getElementById('headerAppName');
+
+        let checkInterval;
+        let countdownInterval;
+        let secondsLeft = 15; // Timer set to 15 seconds
+
+        // 1. CONFIG LOADER (Sync with Master Admin)
+        async function loadAppConfig() {
+            try {
+                const brandSnap = await getDoc(doc(db, "settings", "branding"));
+                if (brandSnap.exists()) {
+                    const data = brandSnap.data();
+                    const appName = data.appName || 'Hatua Recruitment';
+                    
+                    document.title = `Verify Email | ${appName}`;
+                    headerAppName.textContent = appName;
+
+                    if(data.primaryColor) {
+                        document.documentElement.style.setProperty('--primary-dark', data.primaryColor);
+                    }
+                    if(data.fontFamily) {
+                        document.documentElement.style.setProperty('--font-main', `${data.fontFamily}, sans-serif`);
+                    }
+                }
+            } catch (e) { console.error("Config Error", e); }
+        }
+
+        // Init Config
+        document.addEventListener('DOMContentLoaded', loadAppConfig);
+
+        // 2. Initial Auth Check
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userEmailEl.textContent = user.email;
+                configureMailButton(user.email);
+
+                if (user.emailVerified) {
+                    handleVerifiedUser(user);
+                } else {
+                    // Start polling for verification
+                    startVerificationCheck(user);
+                    startResendTimer();
+                }
+            } else {
+                window.location.href = "signin.html";
+            }
+        });
+
+        // 3. Poll Firebase for Verification Status
+        function startVerificationCheck(user) {
+            checkInterval = setInterval(async () => {
+                await reload(user); // Force refresh user token
+                
+                if (user.emailVerified) {
+                    clearInterval(checkInterval);
+                    
+                    // Update UI
+                    statusBadge.classList.add('verified');
+                    statusBadge.innerHTML = '<i class="fas fa-check-circle"></i> <span>Verified! Redirecting...</span>';
+                    document.querySelector('.pulse-ring').style.display = 'none';
+                    document.querySelector('.auth-title').textContent = "Email Verified!";
+                    document.querySelector('.auth-subtitle').innerHTML = "Thank you for verifying. <br>You are now being redirected...";
+                    
+                    // Update Firestore 'isVerified' field
+                    try {
+                        const userRef = doc(db, "users", user.uid);
+                        await updateDoc(userRef, { isVerified: true });
+                    } catch (e) {
+                        console.log("Firestore update skipped or failed", e);
+                    }
+
+                    handleVerifiedUser(user);
+                }
+            }, 3000); // Check every 3 seconds
+        }
+
+        // 4. Handle Redirection based on Role
+        async function handleVerifiedUser(user) {
+            // Short delay for UX animation
+            setTimeout(async () => {
+                try {
+                    const docRef = doc(db, "users", user.uid);
+                    const docSnap = await getDoc(docRef);
+
+                    if (docSnap.exists() && docSnap.data().role === 'admin') {
+                        window.location.href = "admin-dashboard.html";
+                    } else {
+                        window.location.href = "dashboard.html";
+                    }
+                } catch (error) {
+                    // Fallback
+                    window.location.href = "dashboard.html";
+                }
+            }, 2000);
+        }
+
+        // 5. Smart Email Button
+        function configureMailButton(email) {
+            const domain = email.split('@')[1];
+            if (domain.includes('gmail')) {
+                openMailBtn.href = "https://mail.google.com/mail/u/0/#inbox";
+                openMailBtn.innerHTML = '<i class="fab fa-google"></i> Open Gmail';
+            } else if (domain.includes('outlook') || domain.includes('hotmail')) {
+                openMailBtn.href = "https://outlook.live.com/mail/0/inbox";
+                openMailBtn.innerHTML = '<i class="fab fa-microsoft"></i> Open Outlook';
+            } else if (domain.includes('yahoo')) {
+                openMailBtn.href = "https://mail.yahoo.com";
+                openMailBtn.innerHTML = '<i class="fab fa-yahoo"></i> Open Yahoo';
+            } else {
+                // Default fallback
+                openMailBtn.href = "mailto:"; 
+            }
+        }
+
+        // 6. Resend Timer Logic
+        function startResendTimer() {
+            resendBtn.disabled = true;
+            secondsLeft = 15; // Reset to 15 seconds
+            resendText.textContent = `Resend Email in ${secondsLeft}s`; // Immediate update
+            
+            countdownInterval = setInterval(() => {
+                secondsLeft--;
+                resendText.textContent = `Resend Email in ${secondsLeft}s`;
+                
+                if (secondsLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    resendBtn.disabled = false;
+                    resendText.textContent = "Resend Verification Email";
+                }
+            }, 1000);
+        }
+
+        // 7. Resend Action
+        resendBtn.addEventListener('click', async () => {
+            const user = auth.currentUser;
+            if (user) {
+                try {
+                    await sendEmailVerification(user);
+                    // UX Feedback
+                    const originalText = resendText.textContent;
+                    resendText.textContent = "Email Sent!";
+                    setTimeout(() => {
+                        startResendTimer();
+                    }, 1500);
+                } catch (error) {
+                    if (error.code === 'auth/too-many-requests') {
+                        alert("Please wait a moment before trying again.");
+                        startResendTimer(); // Restart timer if too fast
+                    } else {
+                        alert("Error sending email. Please try again later.");
+                    }
+                }
+            }
+        });
+
+        // 8. Logout Action
+        logoutBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await signOut(auth);
+            window.location.href = "signin.html";
+        });
+
+    </script>
+
+</body>
+</html>

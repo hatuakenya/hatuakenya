@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For Employers - Hiresphere</title>
+    <style>
+        :root { --primary: #000; --secondary: #003366; --white: #fff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--white); color: var(--primary); margin:0; }
+        
+        #loader { position: fixed; width:100%; height:100%; background:#fff; z-index:99; display:flex; justify-content:center; align-items:center; }
+        .spinner { width:50px; height:50px; border:5px solid #eee; border-top-color:var(--secondary); border-radius:50%; animation:s 1s linear infinite; }
+        @keyframes s { to { transform:rotate(360deg); } }
+
+        header { background: var(--secondary); color: white; padding: 60px 20px; text-align: center; }
+        header h1 { font-size: 2.5rem; margin-bottom: 10px; }
+        
+        nav { background: #fff; padding: 15px 5%; display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; }
+        nav a { text-decoration: none; color: black; margin-left: 20px; font-weight: 500; }
+
+        .content { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+        
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 50px; }
+        .f-card { padding: 20px; border: 1px solid #ddd; border-radius: 8px; text-align: center; transition: 0.3s; }
+        .f-card:hover { border-color: var(--secondary); transform: scale(1.02); }
+
+        .post-job-form { background: #f4f4f4; padding: 30px; border-radius: 10px; }
+        input, textarea, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }
+        
+        .btn { background: var(--secondary); color: white; padding: 12px 25px; border: none; font-size: 1rem; cursor: pointer; }
+        .btn:hover { background: #001a33; }
+        
+        footer { text-align: center; padding: 30px; border-top: 1px solid #eee; }
+    </style>
+</head>
+<body>
+    <div id="loader"><div class="spinner"></div></div>
+    
+    <nav>
+        <span style="font-weight:bold; color:var(--secondary);">HIRESPHERE EMPLOYER</span>
+        <div>
+            <a href="index.html">Back to Home</a>
+            <a href="contact.html">Contact</a>
+        </div>
+    </nav>
+
+    <header>
+        <h1>Hire the Best Talent</h1>
+        <p>Use our AI-driven ATS to filter, interview, and hire qualified candidates instantly.</p>
+        <button class="btn" style="background: white; color: var(--secondary); margin-top: 20px;">Verify Your Company</button>
+    </header>
+
+    <div class="content">
+        <div class="feature-grid">
+            <div class="f-card">
+                <h3>AI Candidate Screening</h3>
+                <p>We rank applicants by match score so you only see the best.</p>
+            </div>
+            <div class="f-card">
+                <h3>Verified Badges</h3>
+                <p>Get a "Verified Employer" badge to attract top talent.</p>
+            </div>
+            <div class="f-card">
+                <h3>Smart Dashboards</h3>
+                <p>Track time-to-hire and application volume in real-time.</p>
+            </div>
+        </div>
+
+        <div class="post-job-form">
+            <h2 style="color: var(--secondary);">Post a Job</h2>
+            <form>
+                <input type="text" placeholder="Job Title" required>
+                <input type="text" placeholder="Company Name" required>
+                <select>
+                    <option>Select Category</option>
+                    <option>Standard</option>
+                    <option>Urgently Hiring (Premium)</option>
+                    <option>Guaranteed (Premium)</option>
+                </select>
+                <input type="text" placeholder="Location">
+                <textarea rows="5" placeholder="Job Description & Requirements"></textarea>
+                <button class="btn" type="submit">Post Job & Pay Fee</button>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2023 Hiresphere Agency.</p>
+    </footer>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-analytics.js";
+      const firebaseConfig = {
+        apiKey: "AIzaSyDI96N_ElcKpzMxhPyYHCl3538S0X2gcfM",
+        authDomain: "hiresphere-bfb1f.firebaseapp.com",
+        projectId: "hiresphere-bfb1f",
+        storageBucket: "hiresphere-bfb1f.firebasestorage.app",
+        messagingSenderId: "82425629413",
+        appId: "1:82425629413:web:f87127c28a13bc63f3a20c",
+        measurementId: "G-GP52CGQEY3"
+      };
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+    </script>
+    <script>
+        window.addEventListener('load', () => document.getElementById('loader').style.display='none');
+    </script>
+</body>
+</html>

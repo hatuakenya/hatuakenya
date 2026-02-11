@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>My Profile | Hatua Admin</title>
+    <meta name="theme-color" content="#1A1A1A">
+
+    <!-- PWA Manifest & Meta -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/images/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/images/icon-192.png">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* HATUA BRANDING */
+            --primary-dark: #1A1A1A;    /* Charcoal */
+            --primary-light: #F8FAFC;   /* Off-white background */
+            --accent-gold: #D4AF37;     /* Gold */
+            --accent-gold-dim: #F9F1D8; /* Light Gold BG */
+            
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #F8FAFC;
+            --surface-white: #ffffff;
+            
+            --danger-red: #ef4444;
+            --success-green: #10b981;
+            
+            --shadow-subtle: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-elevated: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+            
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * {margin:0;padding:0;box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-main);
+            background: url('assets/images/background.png') repeat, var(--bg-body);
+            background-size: 300px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            padding-bottom: 50px;
+        }
+
+        /* ---- HEADER ---- */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--glass-bg); backdrop-filter: blur(12px);
+            padding: 10px 5%; height: 70px;
+            position: fixed; top: 0; left: 0; right: 0;
+            z-index: 1000; box-shadow: var(--shadow-subtle); border-bottom: 1px solid rgba(0,0,0,0.03);
+        }
+        
+        .logo-con { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-con img { height: 35px; width: auto; }
+        .logo-text { font-size: 1.2rem; font-weight: 700; color: var(--primary-dark); font-family: 'Playfair Display', serif; }
+        .admin-badge {
+            background: var(--primary-dark); color: var(--accent-gold); border: 1px solid var(--accent-gold);
+            padding: 2px 8px; border-radius: 4px; font-size: 0.6rem; font-weight: 700; 
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* HAMBURGER */
+        .hamburger-btn {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(26, 26, 26, 0.05); color: var(--primary-dark);
+            border: none; cursor: pointer; display: grid; place-items: center;
+            font-size: 1.2rem; transition: var(--transition);
+        }
+        .hamburger-btn:hover { background: rgba(212, 175, 55, 0.1); color: var(--accent-gold); }
+
+        /* DRAWER */
+        .menu-overlay {
+            position: fixed; inset: 0; background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(4px); z-index: 2000; opacity: 0; pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .menu-overlay.active { opacity: 1; pointer-events: all; }
+
+        .side-drawer {
+            position: fixed; top: 0; right: 0; bottom: 0;
+            width: 85%; max-width: 320px;
+            background: #fff; z-index: 2001;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column;
+            border-left: 4px solid var(--accent-gold);
+        }
+        .side-drawer.active { transform: translateX(0); }
+
+        .drawer-header { 
+            padding: 30px 25px 25px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 15px; 
+            background: #fff;
+        }
+        .drawer-avatar { width: 50px; height: 50px; background: var(--primary-dark); color: var(--accent-gold); border-radius: 50%; display: grid; place-items: center; font-size: 1.2rem; font-weight: 700; border: 2px solid var(--accent-gold); }
+        .drawer-user h4 { font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 2px; font-weight: 700; }
+        .drawer-user p { font-size: 0.75rem; color: var(--accent-gold); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+        .drawer-links { padding: 20px 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .drawer-item { 
+            padding: 12px 20px; border-radius: 12px; text-decoration: none; color: #475569; 
+            font-weight: 600; display: flex; align-items: center; gap: 15px; transition: 0.2s; font-size: 0.95rem;
+        }
+        .drawer-item i { width: 20px; text-align: center; color: #94a3b8; transition: 0.2s; font-size: 1.1rem; }
+        
+        .drawer-item:hover, .drawer-item.active { background: var(--accent-gold-dim); color: var(--primary-dark); }
+        .drawer-item:hover i, .drawer-item.active i { color: var(--accent-gold); }
+        
+        /* Active state border */
+        .drawer-item.active { border: 1px solid rgba(212, 175, 55, 0.2); }
+
+        .drawer-footer { padding: 20px 25px; border-top: 1px solid #f1f5f9; background: #fff; }
+        .drawer-logout { 
+            width: 100%; padding: 14px; background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2;
+            border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; 
+            justify-content: center; gap: 10px; transition: 0.2s; font-family: var(--font-main);
+        }
+        .drawer-logout:hover { background: #fee2e2; border-color: #fecaca; }
+
+
+        /* ---- CONTENT ---- */
+        .container {
+            margin-top: 80px; padding: 20px 5%;
+            max-width: 800px; margin-left: auto; margin-right: auto; width: 100%;
+        }
+
+        .page-header { 
+            text-align: center; margin-bottom: 30px; animation: slideUp 0.5s ease-out; 
+        }
+        .page-title { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--primary-dark); margin-bottom: 5px; }
+        .page-subtitle { color: var(--text-muted); font-size: 0.95rem; }
+
+        /* PROFILE CARD */
+        .profile-card {
+            background: var(--surface-white); border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-elevated); padding: 40px 30px; border: 1px solid rgba(0,0,0,0.05);
+            animation: slideUp 0.6s ease-out; position: relative; overflow: hidden;
+        }
+        
+        /* Decorative Background Blob */
+        .profile-card::before {
+            content: ''; position: absolute; top: -50px; left: -50px; width: 150px; height: 150px;
+            background: var(--accent-gold-dim); border-radius: 50%; z-index: 0; filter: blur(50px); opacity: 0.8;
+        }
+
+        .profile-header {
+            display: flex; flex-direction: column; align-items: center; margin-bottom: 40px; position: relative; z-index: 1;
+        }
+        
+        .avatar-wrapper {
+            position: relative; margin-bottom: 20px;
+        }
+        .avatar-circle {
+            width: 120px; height: 120px; border-radius: 50%; background: var(--primary-dark);
+            color: var(--accent-gold); font-size: 3rem; font-weight: 700; display: flex;
+            align-items: center; justify-content: center; border: 4px solid white;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15); font-family: 'Playfair Display', serif;
+        }
+        .edit-badge {
+            position: absolute; bottom: 5px; right: 0; background: var(--accent-gold); color: var(--primary-dark);
+            width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 0.9rem; border: 3px solid white; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: var(--transition);
+        }
+        .edit-badge:hover { transform: scale(1.1); }
+
+        .admin-name { font-size: 1.6rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 5px; font-family: 'Playfair Display', serif; }
+        .admin-role { 
+            background: var(--accent-gold-dim); color: var(--primary-dark); padding: 6px 16px; border-radius: 30px; 
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border: 1px solid var(--accent-gold);
+        }
+
+        /* FORM STYLES */
+        .form-grid { display: grid; grid-template-columns: 1fr; gap: 24px; position: relative; z-index: 1; }
+        
+        .form-group label { display: block; font-size: 0.9rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 10px; }
+        
+        .form-input, .form-textarea {
+            width: 100%; padding: 16px; border: 1px solid #e2e8f0; border-radius: 14px;
+            font-size: 1rem; background: #fff; transition: 0.2s; font-family: inherit; outline: none;
+            color: var(--text-main);
+        }
+        .form-input:focus, .form-textarea:focus { border-color: var(--accent-gold); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); }
+        .form-input:disabled { background: #f8fafc; color: #94a3b8; cursor: not-allowed; border-color: #f1f5f9; }
+
+        .btn-save {
+            background: var(--primary-dark); color: var(--accent-gold); border: none; padding: 16px;
+            border-radius: 14px; font-weight: 600; font-size: 1rem; cursor: pointer;
+            transition: var(--transition); width: 100%; margin-top: 10px;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            box-shadow: 0 8px 20px rgba(26, 26, 26, 0.2);
+            border: 2px solid var(--primary-dark);
+        }
+        .btn-save:hover { background: #000; transform: translateY(-2px); border-color: var(--accent-gold); }
+
+        /* LOGOUT SECTION */
+        .logout-section {
+            margin-top: 40px; text-align: center; animation: slideUp 0.7s ease-out;
+        }
+        .btn-logout {
+            background: white; color: var(--danger-red); border: 1px solid #fecaca;
+            padding: 14px 40px; border-radius: 50px; font-weight: 600; cursor: pointer;
+            transition: 0.2s; display: inline-flex; align-items: center; gap: 10px; font-size: 0.95rem;
+            box-shadow: var(--shadow-subtle);
+        }
+        .btn-logout:hover { background: #fef2f2; border-color: var(--danger-red); transform: translateY(-2px); box-shadow: var(--shadow-elevated); }
+
+        /* Loader & Toast */
+        #page-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        .spinner { width: 45px; height: 45px; border: 4px solid #e2e8f0; border-top: 4px solid var(--accent-gold); border-radius: 50%; animation: spin 1s linear infinite; }
+        .btn-spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid var(--accent-gold); border-radius: 50%; animation: spin 1s linear infinite; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #toast {
+            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+            background: var(--primary-dark); color: var(--accent-gold); padding: 14px 28px; border-radius: 50px;
+            font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid var(--accent-gold);
+            opacity: 0; pointer-events: none; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2000;
+            display: flex; align-items: center; gap: 12px; font-size: 0.95rem;
+        }
+        #toast.show { opacity: 1; bottom: 50px; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <!-- PAGE LOADER -->
+    <div id="page-loader"><div class="spinner"></div></div>
+
+    <!-- HEADER -->
+    <header id="header">
+        <a href="admin-dashboard.html" class="logo-con">
+            <img src="assets/images/logo.png" alt="Logo">
+            <span class="logo-text">Hatua</span>
+            <span class="admin-badge">Admin</span>
+        </a>
+
+        <!-- HAMBURGER TRIGGER -->
+        <button class="hamburger-btn" id="menuTrigger">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- DRAWER MENU -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+    <aside class="side-drawer" id="sideDrawer">
+        <div class="drawer-header">
+            <div class="drawer-avatar" id="drawerAvatar">A</div>
+            <div class="drawer-user">
+                <h4 id="drawerName">Admin</h4>
+                <p>Super User</p>
+            </div>
+        </div>
+        
+        <!-- UPDATED NAVIGATION -->
+        <div class="drawer-links">
+            <a href="admin-dashboard.html" class="drawer-item"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="admin-users.html" class="drawer-item"><i class="fas fa-users"></i> Manage Users</a>
+            <a href="admin-apps.html" class="drawer-item"><i class="fas fa-clipboard-list"></i> Applications</a>
+            <a href="admin-testimonials.html" class="drawer-item"><i class="fas fa-comment-alt"></i> Testimonials</a>
+            <a href="admin-post-job.html" class="drawer-item"><i class="fas fa-plus-circle"></i> Post Job</a>
+            <a href="admin-manage-job.html" class="drawer-item"><i class="fas fa-briefcase"></i> Manage Jobs</a>
+            <a href="admin-support.html" class="drawer-item"><i class="fas fa-headset"></i> Support</a>
+            <a href="admin-settings.html" class="drawer-item"><i class="fas fa-cogs"></i> Master Settings</a>
+            <a href="admin-logs.html" class="drawer-item"><i class="fas fa-list-alt"></i> Logs</a>
+            <a href="admin-reports.html" class="drawer-item"><i class="fas fa-chart-line"></i> Analytics</a>
+            <a href="admin-profile.html" class="drawer-item active"><i class="fas fa-user-circle"></i> Profile</a>
+        </div>
+
+        <div class="drawer-footer">
+            <button id="logoutBtnDrawer" class="drawer-logout">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <!-- TOAST -->
+    <div id="toast"><i class="fas fa-check-circle"></i> Profile details updated successfully.</div>
+
+    <!-- CONTENT -->
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Admin Profile</h1>
+            <p class="page-subtitle">Manage your personal information and account security.</p>
+        </div>
+
+        <form id="profileForm">
+            <div class="profile-card">
+                
+                <div class="profile-header">
+                    <div class="avatar-wrapper">
+                        <div class="avatar-circle" id="avatarInitial">A</div>
+                        <div class="edit-badge"><i class="fas fa-camera"></i></div>
+                    </div>
+                    <h2 class="admin-name" id="displayFullName">Loading...</h2>
+                    <span class="admin-role">Super Administrator</span>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="fullName" class="form-input" placeholder="Your Full Name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="email" class="form-input" disabled>
+                        <div style="font-size:0.8rem; color:#94a3b8; margin-top:6px; display:flex; align-items:center; gap:5px;">
+                            <i class="fas fa-lock"></i> Email cannot be changed.
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="phone" class="form-input" placeholder="e.g. +254 712 345 678">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Bio / Role Description</label>
+                        <textarea id="bio" class="form-textarea" rows="4" placeholder="Brief description of your administrative role..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" id="location" class="form-input" placeholder="e.g. Nairobi HQ">
+                    </div>
+
+                    <button type="submit" class="btn-save" id="saveBtn">
+                        <div class="btn-spinner" id="btnSpinner"></div>
+                        <span id="btnText">Save Changes</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="logout-section">
+            <button id="logoutBtn" class="btn-logout">
+                <i class="fas fa-sign-out-alt"></i> Sign Out Securely
+            </button>
+            <p style="color:#cbd5e1; font-size:0.75rem; margin-top:15px; font-weight:500;">Hatua Admin Portal v1.0.4</p>
+        </div>
+
+    </div>
+
+    <!-- FIREBASE & LOGIC -->
+    <script type="module">
+        import { auth, db } from './config.js'; 
+        import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
+        import { doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
+
+        const pageLoader = document.getElementById('page-loader');
+        const form = document.getElementById('profileForm');
+        const saveBtn = document.getElementById('saveBtn');
+        const btnSpinner = document.getElementById('btnSpinner');
+        const btnText = document.getElementById('btnText');
+        const toast = document.getElementById('toast');
+
+        // Drawer
+        const menuTrigger = document.getElementById('menuTrigger');
+        const sideDrawer = document.getElementById('sideDrawer');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const drawerName = document.getElementById('drawerName');
+        const drawerAvatar = document.getElementById('drawerAvatar');
+        const logoutBtnDrawer = document.getElementById('logoutBtnDrawer');
+
+        // Elements to populate
+        const displayFullName = document.getElementById('displayFullName');
+        const avatarInitial = document.getElementById('avatarInitial');
+        const fullNameInput = document.getElementById('fullName');
+        const emailInput = document.getElementById('email');
+        const phoneInput = document.getElementById('phone');
+        const bioInput = document.getElementById('bio');
+        const locationInput = document.getElementById('location');
+
+        let currentUserUid = null;
+
+        // 1. DRAWER TOGGLE
+        function toggleDrawer() {
+            sideDrawer.classList.toggle('active');
+            menuOverlay.classList.toggle('active');
+        }
+        menuTrigger.addEventListener('click', toggleDrawer);
+        menuOverlay.addEventListener('click', toggleDrawer);
+        document.querySelectorAll('.drawer-item').forEach(l => l.addEventListener('click', toggleDrawer));
+
+        // 2. Auth Check
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserUid = user.uid;
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (!userDoc.exists() || (userDoc.data().role !== 'admin' && !userDoc.data().isAdmin)) {
+                        alert("Access Denied.");
+                        window.location.href = "signin.html";
+                        return;
+                    }
+                    
+                    // Populate Form
+                    const data = userDoc.data();
+                    const initial = (data.fullName || 'A').charAt(0).toUpperCase();
+
+                    displayFullName.textContent = data.fullName || 'Admin';
+                    avatarInitial.textContent = initial;
+                    
+                    // Populate Drawer
+                    drawerName.textContent = data.fullName || "Admin";
+                    drawerAvatar.textContent = initial;
+
+                    fullNameInput.value = data.fullName || '';
+                    emailInput.value = user.email || '';
+                    phoneInput.value = data.phone || '';
+                    bioInput.value = data.bio || '';
+                    locationInput.value = data.location || '';
+
+                    pageLoader.style.display = 'none';
+
+                } catch(e) {
+                    console.error("Auth Error", e);
+                    window.location.href = "signin.html";
+                }
+            } else {
+                window.location.href = "signin.html";
+            }
+        });
+
+        // 3. Save Profile
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if(!currentUserUid) return;
+
+            // UI Loading
+            saveBtn.disabled = true;
+            btnSpinner.style.display = 'block';
+            btnText.textContent = 'Updating...';
+
+            const newData = {
+                fullName: fullNameInput.value.trim(),
+                phone: phoneInput.value.trim(),
+                bio: bioInput.value.trim(),
+                location: locationInput.value.trim()
+            };
+
+            try {
+                await updateDoc(doc(db, "users", currentUserUid), newData);
+                
+                // Update Display elements immediately
+                displayFullName.textContent = newData.fullName;
+                const initial = newData.fullName.charAt(0).toUpperCase();
+                avatarInitial.textContent = initial;
+                drawerName.textContent = newData.fullName;
+                drawerAvatar.textContent = initial;
+                
+                showToast();
+
+            } catch (error) {
+                console.error("Error updating profile:", error);
+                alert("Failed to update profile.");
+            } finally {
+                saveBtn.disabled = false;
+                btnSpinner.style.display = 'none';
+                btnText.textContent = 'Save Changes';
+            }
+        });
+
+        // 4. Sign Out Logic (Both Buttons)
+        const logout = async () => {
+            await signOut(auth);
+            window.location.href = "signin.html";
+        };
+
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+        logoutBtnDrawer.addEventListener('click', logout);
+
+        function showToast() {
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Settings | Hatua Recruitment</title>
+    <meta name="theme-color" content="#1A1A1A">
+
+    <!-- PWA Manifest & Meta -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/images/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/images/icon-192.png">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* HATUA BRANDING (Standardized) */
+            --primary-dark: #1A1A1A;    /* Charcoal */
+            --primary-light: #2C2C2C;
+            --accent-main: #D4AF37;     /* Gold */
+            --accent-light: #FFFBEB;    /* Light Gold BG */
+            
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #F8FAFC;
+            --surface-white: #ffffff;
+            
+            --danger-red: #ef4444;
+            --success-green: #10b981;
+            
+            --shadow-subtle: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --radius-md: 16px;
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * {margin:0;padding:0;box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-main);
+            background: url('assets/images/background.png') repeat, var(--bg-body);
+            background-size: 300px;
+            min-height: 100vh;
+            padding-bottom: 50px;
+            overflow-x: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        /* ---- HEADER ---- */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--glass-bg); backdrop-filter: blur(16px);
+            padding: 15px 5%; position: fixed; top: 0; left: 0; right: 0;
+            z-index: 1000; box-shadow: var(--shadow-subtle); border-bottom: 1px solid rgba(0,0,0,0.03);
+        }
+
+        .logo-con { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-con img { height: 35px; width: auto; }
+        .logo-text { font-size: 1.2rem; font-weight: 700; color: var(--primary-dark); font-family: 'Playfair Display', serif; }
+
+        /* HAMBURGER */
+        .hamburger-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(26, 26, 26, 0.05); color: var(--primary-dark);
+            border: none; cursor: pointer; display: grid; place-items: center;
+            font-size: 1.2rem; transition: var(--transition);
+        }
+        .hamburger-btn:hover { background: rgba(212, 175, 55, 0.1); color: var(--accent-main); transform: rotate(90deg); }
+
+        /* DRAWER */
+        .menu-overlay {
+            position: fixed; inset: 0; background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(4px); z-index: 2000; opacity: 0; pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .menu-overlay.active { opacity: 1; pointer-events: all; }
+
+        .side-drawer {
+            position: fixed; top: 0; right: 0; bottom: 0;
+            width: 80%; max-width: 320px;
+            background: #fff; z-index: 2001;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column; padding: 30px 0;
+            border-left: 4px solid var(--accent-main);
+        }
+        .side-drawer.active { transform: translateX(0); }
+
+        .drawer-header { padding: 0 25px 25px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 15px; }
+        .drawer-avatar { width: 50px; height: 50px; background: var(--primary-dark); color: var(--accent-main); border-radius: 50%; display: grid; place-items: center; font-size: 1.2rem; font-weight: 700; border: 2px solid var(--accent-main); }
+        .drawer-user h4 { font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 2px; }
+        .drawer-user p { font-size: 0.85rem; color: var(--text-muted); }
+
+        .drawer-links { padding: 20px 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+        .drawer-item { padding: 12px 20px; border-radius: 12px; text-decoration: none; color: #1e293b; font-weight: 600; display: flex; align-items: center; gap: 15px; transition: 0.2s; }
+        .drawer-item i { width: 24px; text-align: center; color: #64748b; transition: 0.2s; }
+        .drawer-item:hover, .drawer-item.active { background: var(--accent-light); color: var(--primary-dark); }
+        .drawer-item:hover i, .drawer-item.active i { color: var(--accent-main); }
+        
+        .drawer-footer { padding: 20px 25px 0; border-top: 1px solid #f1f5f9; }
+        .drawer-logout { width: 100%; padding: 12px; background: #fef2f2; color: #ef4444; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; font-family: var(--font-main); }
+        .drawer-logout:hover { background: #fee2e2; }
+
+        /* ---- CONTENT ---- */
+        .page-container {
+            margin-top: 90px;
+            padding: 0 5%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+        }
+
+        .page-title { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--primary-dark); margin-bottom: 5px; }
+        .page-subtitle { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 30px; }
+
+        /* Sections */
+        .settings-section {
+            background: var(--surface-white); border-radius: var(--radius-md);
+            padding: 25px; margin-bottom: 20px;
+            box-shadow: var(--shadow-subtle); border: 1px solid rgba(0,0,0,0.04);
+            animation: slideUp 0.4s ease-out;
+        }
+
+        .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #f1f5f9; }
+        .section-icon { 
+            width: 36px; height: 36px; border-radius: 10px; background: var(--accent-light); color: var(--primary-dark);
+            display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+        }
+        .section-title { font-size: 1.1rem; font-weight: 700; color: var(--primary-dark); font-family: 'Playfair Display', serif; }
+
+        /* Form Elements */
+        .form-group { margin-bottom: 18px; }
+        .form-label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-input {
+            width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid #e2e8f0;
+            font-family: inherit; font-size: 0.95rem; background: #f8fafc; transition: var(--transition);
+        }
+        .form-input:focus { background: #fff; border-color: var(--accent-main); outline: none; box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1); }
+        .form-input:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        /* Toggles */
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .toggle-text h4 { font-size: 0.95rem; font-weight: 600; color: var(--primary-dark); }
+        .toggle-text p { font-size: 0.8rem; color: var(--text-muted); }
+        
+        .switch { position: relative; display: inline-block; width: 46px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: var(--accent-main); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Buttons */
+        .btn-primary {
+            width: 100%; padding: 14px; border: none; border-radius: 12px;
+            background: var(--primary-dark); color: #fff; font-weight: 600; font-size: 1rem;
+            cursor: pointer; transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: 8px;
+            border: 2px solid var(--primary-dark);
+        }
+        .btn-primary:hover { background: var(--accent-main); color: #fff; transform: translateY(-2px); border-color: var(--accent-main); }
+        
+        .btn-outline {
+            width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 12px;
+            background: transparent; color: var(--text-main); font-weight: 600; font-size: 0.95rem;
+            cursor: pointer; transition: var(--transition); margin-top: 10px;
+        }
+        .btn-outline:hover { background: #f1f5f9; border-color: var(--accent-main); color: var(--primary-dark); }
+
+        .btn-danger {
+            background: #fee2e2; color: var(--danger-red); border: 1px solid #fecaca;
+            width: 100%; padding: 14px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .btn-danger:hover { background: #fca5a5; color: #7f1d1d; }
+
+        /* Links */
+        .settings-link {
+            display: flex; justify-content: space-between; align-items: center; padding: 15px 0;
+            border-bottom: 1px solid #f1f5f9; text-decoration: none; color: var(--text-main);
+            transition: 0.2s; cursor: pointer;
+        }
+        .settings-link:last-child { border-bottom: none; }
+        .settings-link:hover { padding-left: 5px; color: var(--accent-main); }
+        .link-content { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+        .chevron { color: #cbd5e1; font-size: 0.8rem; }
+
+        /* Toast Notification */
+        #toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: var(--primary-dark); color: var(--accent-main); padding: 12px 24px; border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); font-size: 0.9rem; font-weight: 600;
+            opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2000;
+            display: flex; align-items: center; gap: 10px;
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        #toast.success { background: var(--success-green); color: white; }
+        #toast.error { background: var(--danger-red); color: white; }
+
+        /* Loader */
+        #page-loader { 
+            position: fixed; inset: 0; background: #fff; z-index: 10000; 
+            display: flex; justify-content: center; align-items: center; 
+        }
+        .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top: 4px solid var(--accent-main); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    </style>
+</head>
+<body>
+
+    <div id="page-loader"><div class="spinner"></div></div>
+
+    <header id="mainHeader">
+        <a href="dashboard.html" class="logo-con">
+            <img src="assets/images/logo.png" alt="Logo" id="headerLogo">
+            <span class="logo-text" id="headerAppName">Hatua Recruitment</span>
+        </a>
+
+        <button class="hamburger-btn" id="menuTrigger">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- DRAWER -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+    <aside class="side-drawer" id="sideDrawer">
+        <div class="drawer-header">
+            <div class="drawer-avatar" id="drawerAvatar">M</div>
+            <div class="drawer-user">
+                <h4 id="drawerName">Member</h4>
+                <p>Hatua Member</p>
+            </div>
+        </div>
+        
+        <div class="drawer-links">
+            <a href="dashboard.html" class="drawer-item"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="jobs.html" class="drawer-item"><i class="fas fa-briefcase"></i> Browse Jobs</a>
+            <a href="notifications.html" class="drawer-item"><i class="fas fa-bell"></i> Notifications</a>
+            <a href="saved-jobs.html" class="drawer-item"><i class="fas fa-bookmark"></i> Saved Jobs</a>
+            <a href="applications.html" class="drawer-item"><i class="fas fa-paper-plane"></i> My Applications</a>
+            <a href="messages.html" class="drawer-item"><i class="fas fa-comment-dots"></i> Messages</a>
+            <a href="settings.html" class="drawer-item active"><i class="fas fa-cog"></i> Settings</a>
+            <a href="profile.html" class="drawer-item"><i class="fas fa-user"></i> My Profile</a>
+        </div>
+
+        <div class="drawer-footer">
+            <button id="logoutBtn" class="drawer-logout">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <div class="page-container">
+        
+        <h1 class="page-title">Settings</h1>
+        <p class="page-subtitle">Manage your account preferences and security.</p>
+
+        <!-- 1. ACCOUNT PROFILE -->
+        <div class="settings-section">
+            <div class="section-header">
+                <div class="section-icon"><i class="fas fa-user-circle"></i></div>
+                <div class="section-title">Profile Information</div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" id="emailInput" class="form-input" disabled value="...">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" id="nameInput" class="form-input" placeholder="Your Name">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" id="phoneInput" class="form-input" placeholder="+254...">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Bio / About</label>
+                <textarea id="bioInput" class="form-input" rows="3" placeholder="Briefly describe yourself..."></textarea>
+            </div>
+
+            <button class="btn-primary" id="saveProfileBtn">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+        </div>
+
+        <!-- 2. NOTIFICATIONS -->
+        <div class="settings-section">
+            <div class="section-header">
+                <div class="section-icon"><i class="fas fa-bell"></i></div>
+                <div class="section-title">Notifications</div>
+            </div>
+
+            <div class="toggle-row">
+                <div class="toggle-text">
+                    <h4>Job Alerts</h4>
+                    <p>Get notified about new jobs matching your profile.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="jobAlertsToggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-row">
+                <div class="toggle-text">
+                    <h4>Application Updates</h4>
+                    <p>Status changes on your applications.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="appUpdatesToggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- 3. SECURITY -->
+        <div class="settings-section">
+            <div class="section-header">
+                <div class="section-icon"><i class="fas fa-shield-alt"></i></div>
+                <div class="section-title">Security</div>
+            </div>
+            
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">
+                Secure your account by updating your password regularly.
+            </p>
+            <button class="btn-outline" id="resetPassBtn">
+                <i class="fas fa-key"></i> Send Password Reset Email
+            </button>
+        </div>
+
+        <!-- 4. DANGER ZONE -->
+        <div class="settings-section" style="border: 1px solid #fee2e2;">
+            <div class="section-header" style="border-bottom-color: #fee2e2;">
+                <div class="section-icon" style="background:#fee2e2; color:var(--danger-red);"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="section-title" style="color:var(--danger-red);">Danger Zone</div>
+            </div>
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">
+                Deleting your account is permanent. All your data will be wiped.
+            </p>
+            <button class="btn-danger" id="deleteAccountBtn">
+                <i class="fas fa-trash"></i> Delete Account
+            </button>
+        </div>
+
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast"><i class="fas fa-check-circle"></i> <span>Saved successfully</span></div>
+
+    <!-- FIREBASE LOGIC -->
+    <script type="module">
+        import { auth, db } from './config.js'; 
+        import { onAuthStateChanged, signOut, sendPasswordResetEmail, deleteUser } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
+        import { doc, getDoc, updateDoc, deleteDoc, collection, query, where, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
+
+        const pageLoader = document.getElementById('page-loader');
+        const toast = document.getElementById('toast');
+        const headerAppName = document.getElementById('headerAppName');
+
+        // Drawer
+        const menuTrigger = document.getElementById('menuTrigger');
+        const sideDrawer = document.getElementById('sideDrawer');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const drawerName = document.getElementById('drawerName');
+        const drawerAvatar = document.getElementById('drawerAvatar');
+
+        // Inputs
+        const emailInput = document.getElementById('emailInput');
+        const nameInput = document.getElementById('nameInput');
+        const phoneInput = document.getElementById('phoneInput');
+        const bioInput = document.getElementById('bioInput');
+        const jobAlertsToggle = document.getElementById('jobAlertsToggle');
+        const appUpdatesToggle = document.getElementById('appUpdatesToggle');
+
+        // Buttons
+        const saveProfileBtn = document.getElementById('saveProfileBtn');
+        const resetPassBtn = document.getElementById('resetPassBtn');
+        const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+
+        let currentUser = null;
+
+        // 1. DRAWER TOGGLE
+        function toggleDrawer() {
+            sideDrawer.classList.toggle('active');
+            menuOverlay.classList.toggle('active');
+        }
+        function closeDrawer() {
+            sideDrawer.classList.remove('active');
+            menuOverlay.classList.remove('active');
+        }
+        menuTrigger.addEventListener('click', toggleDrawer);
+        menuOverlay.addEventListener('click', closeDrawer);
+        // Auto-close on link click
+        document.querySelectorAll('.drawer-item').forEach(l => l.addEventListener('click', closeDrawer));
+
+        logoutBtn.addEventListener('click', async () => {
+            await signOut(auth);
+            window.location.href = "signin.html";
+        });
+
+        // 2. CONFIG LOADER
+        async function loadAppConfig() {
+            try {
+                const brandSnap = await getDoc(doc(db, "settings", "branding"));
+                if (brandSnap.exists()) {
+                    const data = brandSnap.data();
+                    const appName = data.appName || 'Hatua Recruitment';
+                    
+                    document.title = `Settings | ${appName}`;
+                    headerAppName.textContent = appName;
+                    
+                    if(data.primaryColor) document.documentElement.style.setProperty('--primary-dark', data.primaryColor);
+                }
+            } catch (e) { console.error("Config Error", e); }
+        }
+
+        // Init Config
+        document.addEventListener('DOMContentLoaded', loadAppConfig);
+
+        // 3. Auth & Init
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                emailInput.value = user.email;
+                
+                await loadUserData(user.uid);
+                
+                pageLoader.style.display = 'none';
+            } else {
+                window.location.href = "signin.html";
+            }
+        });
+
+        // 4. Load Data
+        async function loadUserData(uid) {
+            try {
+                const docSnap = await getDoc(doc(db, "users", uid));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    nameInput.value = data.name || '';
+                    phoneInput.value = data.phone || '';
+                    bioInput.value = data.bio || '';
+                    
+                    // Drawer
+                    drawerName.textContent = data.name || "Member";
+                    drawerAvatar.textContent = (data.name || 'M').charAt(0).toUpperCase();
+
+                    if (data.settings) {
+                        jobAlertsToggle.checked = data.settings.jobAlerts !== false;
+                        appUpdatesToggle.checked = data.settings.appUpdates !== false;
+                    }
+                }
+            } catch (e) { console.error("Error loading profile", e); }
+        }
+
+        // 5. Save Profile
+        saveProfileBtn.addEventListener('click', async () => {
+            if (!currentUser) return;
+            
+            showLoadingBtn(saveProfileBtn, true);
+
+            try {
+                // Save Profile & Toggles together
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    name: nameInput.value.trim(),
+                    phone: phoneInput.value.trim(),
+                    bio: bioInput.value.trim(),
+                    settings: {
+                        jobAlerts: jobAlertsToggle.checked,
+                        appUpdates: appUpdatesToggle.checked
+                    },
+                    lastUpdated: new Date()
+                });
+
+                // Update Drawer instantly
+                drawerName.textContent = nameInput.value.trim();
+                drawerAvatar.textContent = nameInput.value.trim().charAt(0).toUpperCase();
+
+                showToast("Profile updated successfully!", "success");
+            } catch (e) {
+                console.error(e);
+                showToast("Failed to update profile.", "error");
+            } finally {
+                showLoadingBtn(saveProfileBtn, false, '<i class="fas fa-save"></i> Save Changes');
+            }
+        });
+
+        // 6. Auto-save Toggles
+        [jobAlertsToggle, appUpdatesToggle].forEach(toggle => {
+            toggle.addEventListener('change', async () => {
+                if(!currentUser) return;
+                try {
+                    await updateDoc(doc(db, "users", currentUser.uid), {
+                        "settings.jobAlerts": jobAlertsToggle.checked,
+                        "settings.appUpdates": appUpdatesToggle.checked
+                    });
+                    showToast("Preference saved.", "success");
+                } catch(e) { console.error(e); }
+            });
+        });
+
+        // 7. Password Reset
+        resetPassBtn.addEventListener('click', async () => {
+            if(!currentUser || !currentUser.email) return;
+            const confirmReset = confirm(`Send password reset link to ${currentUser.email}?`);
+            if(confirmReset) {
+                try {
+                    await sendPasswordResetEmail(auth, currentUser.email);
+                    showToast("Reset link sent! Check your email.", "success");
+                } catch(e) {
+                    showToast("Error sending link. Try again later.", "error");
+                }
+            }
+        });
+
+        // 8. Delete Account
+        deleteAccountBtn.addEventListener('click', async () => {
+            const confirmed = confirm("WARNING: This will permanently delete your account and all associated data. Are you sure?");
+            if (confirmed) {
+                const doubleCheck = prompt("Type 'DELETE' to confirm:");
+                if (doubleCheck === 'DELETE') {
+                    try {
+                        // Delete Firestore Data first
+                        await deleteDoc(doc(db, "users", currentUser.uid));
+                        // Delete Auth User
+                        await deleteUser(currentUser);
+                        window.location.href = "signin.html";
+                    } catch (e) {
+                        console.error(e);
+                        showToast("Login again to perform this action.", "error");
+                    }
+                }
+            }
+        });
+
+        // --- Helpers ---
+        function showToast(msg, type) {
+            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> <span>${msg}</span>`;
+            toast.className = type; 
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function showLoadingBtn(btn, isLoading, originalHtml) {
+            if (isLoading) {
+                btn.disabled = true;
+                btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:2px;border-top-color:#fff;"></div> Saving...';
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        }
+
+    </script>
+</body>
+</html>

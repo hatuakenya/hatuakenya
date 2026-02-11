@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Support Tickets | Hatua Admin</title>
+    <meta name="theme-color" content="#1A1A1A">
+
+    <!-- PWA / Icons -->
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="assets/images/icon-192.png">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* HATUA BRANDING */
+            --primary-dark: #1A1A1A;    /* Charcoal */
+            --primary-light: #F8FAFC;   /* Off-white background */
+            --accent-gold: #D4AF37;     /* Gold */
+            --accent-gold-dim: #F9F1D8; /* Light Gold BG */
+            
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #F8FAFC;
+            --surface-white: #ffffff;
+            
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+
+            /* Chat Bubbles */
+            --chat-admin-bg: #1A1A1A; 
+            --chat-admin-text: #D4AF37;
+            --chat-user-bg: #ffffff;
+            --chat-bot-bg: #f1f5f9;
+            
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {margin:0;padding:0;box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-main);
+            background: url('assets/images/background.png') repeat, var(--bg-body);
+            background-size: 300px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; 
+        }
+
+        /* ---- HEADER ---- */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px);
+            padding: 10px 5%; height: 70px; flex-shrink: 0;
+            z-index: 1000; box-shadow: var(--shadow-sm); border-bottom: 1px solid rgba(0,0,0,0.03);
+            position: relative;
+        }
+        
+        .logo-con { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-con img { height: 35px; width: auto; }
+        .logo-text { font-size: 1.2rem; font-weight: 700; color: var(--primary-dark); font-family: 'Playfair Display', serif; }
+        .badge-admin { 
+            background: var(--primary-dark); color: var(--accent-gold); border: 1px solid var(--accent-gold);
+            padding: 2px 8px; border-radius: 4px; font-size: 0.6rem; font-weight: 700; 
+            text-transform: uppercase; margin-left: 5px; letter-spacing: 1px;
+        }
+
+        /* ---- HAMBURGER MENU STYLES ---- */
+        .hamburger-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(26, 26, 26, 0.05); color: var(--primary-dark);
+            border: none; cursor: pointer; display: grid; place-items: center;
+            font-size: 1.2rem; transition: var(--transition);
+            position: relative; z-index: 1002;
+        }
+        .hamburger-btn:hover { background: rgba(212, 175, 55, 0.1); color: var(--accent-gold); transform: rotate(90deg); }
+        
+        .nav-notification-dot {
+            position: absolute; top: 8px; right: 8px;
+            width: 10px; height: 10px; background: #ef4444;
+            border-radius: 50%; border: 2px solid #fff;
+            opacity: 0; transition: 0.3s; pointer-events: none;
+        }
+        .nav-notification-dot.show { opacity: 1; }
+
+        /* Menu Overlay & Drawer */
+        .menu-overlay {
+            position: fixed; inset: 0; background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            z-index: 2000; opacity: 0; pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .menu-overlay.active { opacity: 1; pointer-events: all; }
+
+        .side-drawer {
+            position: fixed; top: 0; right: 0; bottom: 0;
+            width: 85%; max-width: 320px;
+            background: #fff; z-index: 2001;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column;
+            border-left: 4px solid var(--accent-gold);
+        }
+        .side-drawer.active { transform: translateX(0); }
+
+        .drawer-header { 
+            padding: 30px 25px 25px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 15px; 
+            background: #fff;
+        }
+        .drawer-avatar { width: 50px; height: 50px; background: var(--primary-dark); color: var(--accent-gold); border-radius: 50%; display: grid; place-items: center; font-size: 1.2rem; font-weight: 700; border: 2px solid var(--accent-gold); }
+        .drawer-user h4 { font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 2px; font-weight: 700; }
+        .drawer-user p { font-size: 0.75rem; color: var(--accent-gold); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+        .drawer-links { padding: 20px 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .drawer-item { 
+            padding: 12px 20px; border-radius: 12px; text-decoration: none; color: #475569; 
+            font-weight: 600; display: flex; align-items: center; gap: 15px; transition: 0.2s; font-size: 0.95rem;
+        }
+        .drawer-item i { width: 20px; text-align: center; color: #94a3b8; transition: 0.2s; font-size: 1.1rem; }
+        
+        .drawer-item:hover, .drawer-item.active { background: var(--accent-gold-dim); color: var(--primary-dark); }
+        .drawer-item:hover i, .drawer-item.active i { color: var(--accent-gold); }
+        .drawer-item.active { border: 1px solid rgba(212, 175, 55, 0.2); }
+        
+        .drawer-badge {
+            margin-left: auto; background: #ef4444; color: #fff;
+            font-size: 0.75rem; padding: 2px 8px; border-radius: 10px;
+            opacity: 0;
+        }
+        .drawer-badge.show { opacity: 1; }
+
+        .drawer-footer { padding: 20px 25px; border-top: 1px solid #f1f5f9; background: #fff; }
+        .drawer-logout { 
+            width: 100%; padding: 14px; background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2;
+            border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; 
+            justify-content: center; gap: 10px; transition: 0.2s; font-family: var(--font-main);
+        }
+        .drawer-logout:hover { background: #fee2e2; border-color: #fecaca; }
+
+        /* ---- SPLIT LAYOUT ---- */
+        .inbox-container {
+            display: flex; flex: 1; height: calc(100vh - 70px);
+            overflow: hidden; position: relative; padding-bottom: 0;
+        }
+
+        /* LEFT: Ticket List */
+        .ticket-list-col {
+            width: 380px; background: var(--surface-white); border-right: 1px solid rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; flex-shrink: 0; z-index: 5;
+        }
+        
+        .list-header { padding: 20px; border-bottom: 1px solid rgba(0,0,0,0.05); background: #fff; }
+        .list-title { font-weight: 800; font-size: 1.2rem; color: var(--primary-dark); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; font-family: 'Playfair Display', serif; }
+        
+        .unread-badge-counter {
+            background: #ef4444; color: white; font-size: 0.65rem; padding: 4px 10px; border-radius: 20px;
+            font-weight: 700; display: none; box-shadow: 0 2px 5px rgba(239, 68, 68, 0.3); font-family: var(--font-main); letter-spacing: 0.5px;
+        }
+
+        .filter-tabs { display: flex; gap: 8px; background: #f8fafc; padding: 6px; border-radius: 14px; border: 1px solid #e2e8f0; }
+        .filter-tab {
+            flex: 1; padding: 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 700;
+            background: transparent; color: var(--text-muted); cursor: pointer; border: none; transition: 0.2s;
+        }
+        .filter-tab.active { background: var(--primary-dark); color: var(--accent-gold); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+        .ticket-list { flex: 1; overflow-y: auto; padding-bottom: 20px; }
+
+        /* Group Dividers */
+        .list-group-header {
+            padding: 12px 20px; background: #f8fafc; color: #64748b; font-size: 0.7rem; 
+            font-weight: 800; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;
+            display: flex; align-items: center; gap: 8px; letter-spacing: 1px;
+        }
+
+        .ticket-item {
+            padding: 20px; border-bottom: 1px solid #f8fafc; cursor: pointer;
+            transition: background 0.2s; position: relative; border-left: 4px solid transparent;
+        }
+        .ticket-item:hover { background: #f8fafc; }
+        .ticket-item.active { background: #FFFBEB; border-left-color: var(--accent-gold); }
+        
+        /* Unread State */
+        .ticket-item.unread { background: #fff5f5; } 
+        .ticket-item.unread .t-subject { font-weight: 800; color: var(--primary-dark); }
+        .ticket-item.unread::after {
+            content: ''; position: absolute; right: 20px; top: 25px;
+            width: 8px; height: 8px; background: #ef4444; border-radius: 50%;
+        }
+        
+        /* Status Indicators */
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .dot-open { background: var(--success); } 
+        .dot-resolved { background: #94a3b8; } 
+        
+        .t-subject { font-weight: 600; font-size: 0.95rem; color: #334155; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+        .t-meta { font-size: 0.8rem; color: #64748b; display: flex; justify-content: space-between; align-items: center; }
+        .t-code { font-size: 0.65rem; background: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-weight: 700; color: #475569; margin-left: 6px; letter-spacing: 0.5px; }
+
+        /* RIGHT: Chat Area */
+        .chat-pane-col {
+            flex: 1; background: #f1f5f9; display: flex; flex-direction: column;
+            overflow: hidden; position: relative;
+        }
+
+        .empty-state {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100%; color: #94a3b8; text-align: center; padding: 20px;
+        }
+        .empty-icon {
+            font-size: 3rem; margin-bottom: 20px; color: var(--accent-gold);
+            background: white; padding: 30px; border-radius: 50%;
+            box-shadow: var(--shadow-sm); border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .chat-view { display: none; flex-direction: column; height: 100%; }
+        .chat-view.active { display: flex; }
+
+        .view-header {
+            padding: 15px 25px; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03); z-index: 10;
+        }
+        .user-info h3 { font-size: 1.1rem; font-weight: 700; color: var(--primary-dark); display: flex; align-items: center; font-family: 'Playfair Display', serif; }
+        .user-info span { font-size: 0.85rem; color: #64748b; font-weight: 500; }
+
+        .btn-resolve {
+            background: white; border: 1px solid #cbd5e1; padding: 10px 18px;
+            border-radius: 30px; font-weight: 700; cursor: pointer; font-size: 0.85rem;
+            color: #475569; transition: 0.2s; display: flex; align-items: center; gap: 8px;
+        }
+        .btn-resolve:hover { background: #f8fafc; border-color: var(--accent-gold); color: var(--primary-dark); }
+        .btn-resolve.is-resolved { background: #ecfdf5; color: #059669; border-color: #d1fae5; }
+
+        /* Chat History */
+        .chat-history {
+            flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px;
+            background: url('assets/images/background.png'); scroll-behavior: smooth;
+            padding-bottom: 30px; 
+        }
+
+        .msg-bubble {
+            max-width: 75%; padding: 14px 18px; border-radius: 18px;
+            font-size: 0.95rem; line-height: 1.5; word-wrap: break-word; position: relative;
+            user-select: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .bubble-admin {
+            align-self: flex-end; 
+            background: var(--chat-admin-bg); 
+            color: var(--chat-admin-text);
+            border-bottom-right-radius: 4px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        
+        .bubble-user {
+            align-self: flex-start; background: var(--chat-user-bg); color: var(--primary-dark);
+            border-bottom-left-radius: 4px; border: 1px solid #e2e8f0;
+        }
+        
+        .bubble-bot {
+            align-self: flex-start; background: var(--chat-bot-bg); color: #64748b;
+            border-bottom-left-radius: 4px; font-size: 0.85rem; border: 1px solid #cbd5e1;
+            font-style: italic; max-width: 60%;
+        }
+
+        .msg-time { font-size: 0.7rem; margin-top: 5px; opacity: 0.7; text-align: right; display: block; font-weight: 500; }
+        .bubble-user .msg-time { text-align: left; }
+
+        /* Context Menu (Long Press) */
+        .context-menu {
+            position: absolute; background: white; border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: 1px solid #e2e8f0;
+            display: none; z-index: 9999; overflow: hidden; width: 160px;
+        }
+        .context-item {
+            padding: 12px 16px; font-size: 0.9rem; color: var(--text-main);
+            cursor: pointer; display: flex; align-items: center; gap: 10px;
+            transition: 0.2s; border-bottom: 1px solid #f8fafc; font-weight: 600;
+        }
+        .context-item:last-child { border-bottom: none; }
+        .context-item:hover { background: #FFFBEB; color: var(--primary-dark); }
+        .context-item.delete { color: #ef4444; }
+
+        /* Input Area */
+        .input-box {
+            background: white; padding: 15px 25px; border-top: 1px solid rgba(0,0,0,0.05);
+            display: flex; gap: 12px; align-items: center;
+            /* Safe area for iPhone X+ */
+            padding-bottom: max(15px, env(safe-area-inset-bottom));
+        }
+        .chat-input {
+            flex: 1; padding: 14px 20px; border: 1px solid #e2e8f0; border-radius: 30px;
+            font-family: inherit; font-size: 0.95rem; outline: none; background: #f8fafc;
+            transition: border 0.2s; font-weight: 500;
+        }
+        .chat-input:focus { border-color: var(--accent-gold); background: white; box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); }
+        
+        .send-btn {
+            width: 48px; height: 48px; border-radius: 50%; background: var(--primary-dark); color: var(--accent-gold);
+            border: none; display: flex; align-items: center; justify-content: center; cursor: pointer;
+            font-size: 1.2rem; transition: 0.2s; flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .send-btn:hover { background: #000; color: #fff; transform: scale(1.05); }
+        .send-btn:disabled { background: #cbd5e1; color: #fff; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .resolved-banner {
+            background: #f1f5f9; color: #64748b; text-align: center; padding: 20px;
+            font-size: 0.9rem; font-weight: 700; display: none; border-top: 1px solid #e2e8f0;
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
+        }
+
+        /* Mobile Adjustments */
+        .back-btn { display: none; cursor: pointer; color: var(--primary-dark); font-size: 1.2rem; margin-right: 15px; padding: 5px; }
+
+        @media (max-width: 900px) {
+            .ticket-list-col { width: 100%; }
+            .chat-pane-col { 
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                z-index: 2000; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.33, 1, 0.68, 1);
+                /* IMPORTANT: Remove padding so input sits at bottom */
+                padding-bottom: 0 !important; 
+            }
+            .chat-pane-col.mobile-show { transform: translateX(0); }
+            .back-btn { display: block; }
+            .inbox-container { padding-bottom: 0; }
+        }
+
+        /* Loader */
+        .loader-overlay { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        .spinner { width: 45px; height: 45px; border: 4px solid #e2e8f0; border-top: 4px solid var(--accent-gold); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+    <div class="loader-overlay" id="pageLoader"><div class="spinner"></div></div>
+
+    <!-- HEADER -->
+    <header id="mainHeader">
+        <a href="admin-dashboard.html" class="logo-con">
+            <img src="assets/images/logo.png" alt="Logo">
+            <span class="logo-text">Hatua</span>
+            <span class="badge-admin">Admin</span>
+        </a>
+
+        <!-- Hamburger Trigger -->
+        <button class="hamburger-btn" id="menuTrigger">
+            <i class="fas fa-bars"></i>
+            <div class="nav-notification-dot" id="menuBadge"></div>
+        </button>
+    </header>
+
+    <!-- NAVIGATION OVERLAY & DRAWER -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+    <aside class="side-drawer" id="sideDrawer">
+        <div class="drawer-header">
+            <div class="drawer-avatar" id="drawerAvatar">A</div>
+            <div class="drawer-user">
+                <h4 id="drawerName">Admin</h4>
+                <p>Master Admin</p>
+            </div>
+        </div>
+        
+        <!-- UPDATED NAVIGATION -->
+        <div class="drawer-links">
+            <a href="admin-dashboard.html" class="drawer-item"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="admin-users.html" class="drawer-item"><i class="fas fa-users"></i> Manage Users</a>
+            <a href="admin-apps.html" class="drawer-item"><i class="fas fa-clipboard-list"></i> Applications</a>
+            <a href="admin-testimonials.html" class="drawer-item"><i class="fas fa-comment-alt"></i> Testimonials</a>
+            <a href="admin-post-job.html" class="drawer-item"><i class="fas fa-plus-circle"></i> Post Job</a>
+            <a href="admin-manage-job.html" class="drawer-item"><i class="fas fa-briefcase"></i> Manage Jobs</a>
+            <a href="admin-support.html" class="drawer-item active">
+                <i class="fas fa-headset"></i> Support
+                <span class="drawer-badge" id="drawerMsgBadge">0</span>
+            </a>
+            <a href="admin-settings.html" class="drawer-item"><i class="fas fa-cogs"></i> Master Settings</a>
+            <a href="admin-logs.html" class="drawer-item"><i class="fas fa-list-alt"></i> Logs</a>
+            <a href="admin-reports.html" class="drawer-item"><i class="fas fa-chart-line"></i> Analytics</a>
+            <a href="admin-profile.html" class="drawer-item"><i class="fas fa-user-circle"></i> Profile</a>
+        </div>
+
+        <div class="drawer-footer">
+            <button id="logoutBtn" class="drawer-logout">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <div class="inbox-container">
+        
+        <!-- Ticket List -->
+        <div class="ticket-list-col">
+            <div class="list-header">
+                <div class="list-title">
+                    Support Tickets
+                    <span id="unreadCounter" class="unread-badge-counter">0 New</span>
+                </div>
+                <div class="filter-tabs">
+                    <button class="filter-tab active" onclick="filterTickets('all', this)">All</button>
+                    <button class="filter-tab" onclick="filterTickets('open', this)">Open</button>
+                    <button class="filter-tab" onclick="filterTickets('resolved', this)">Resolved</button>
+                </div>
+            </div>
+            <div id="ticketList" class="ticket-list">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
+        <!-- Chat View -->
+        <div class="chat-pane-col" id="chatPane">
+            
+            <div id="emptyState" class="empty-state">
+                <div class="empty-icon"><i class="fas fa-comments"></i></div>
+                <h3 style="color:var(--primary-dark); margin-bottom:5px; font-family: 'Playfair Display', serif;">Select a Ticket</h3>
+                <p style="font-size:0.95rem;">View conversation history & reply to users.</p>
+            </div>
+
+            <div id="chatView" class="chat-view">
+                
+                <div class="view-header">
+                    <div style="display:flex; align-items:center;">
+                        <span class="back-btn" onclick="closeMobileView()"><i class="fas fa-arrow-left"></i></span>
+                        <div class="user-info">
+                            <h3 id="displaySubject">Ticket Subject <span id="displayCode" class="t-code">#T-0000</span></h3>
+                            <span id="displayUser">user@example.com</span>
+                        </div>
+                    </div>
+                    <button class="btn-resolve" id="resolveBtn" onclick="toggleResolve()">
+                        <i class="fas fa-check"></i> Mark Resolved
+                    </button>
+                </div>
+
+                <div class="chat-history" id="chatHistory">
+                    <!-- Messages Injected Here -->
+                </div>
+
+                <!-- Context Menu -->
+                <div id="contextMenu" class="context-menu">
+                    <div class="context-item" onclick="copyMessage()"><i class="fas fa-copy"></i> Copy Text</div>
+                    <div class="context-item delete" onclick="deleteMessage()"><i class="fas fa-trash"></i> Delete</div>
+                </div>
+
+                <div class="resolved-banner" id="resolvedBanner">
+                    <i class="fas fa-lock"></i> This ticket is resolved. Re-open to reply.
+                </div>
+
+                <div class="input-box" id="inputBox">
+                    <input type="text" id="replyInput" class="chat-input" placeholder="Type a reply..." autocomplete="off">
+                    <button class="send-btn" id="sendBtn" onclick="sendReply()"><i class="fas fa-paper-plane"></i></button>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FIREBASE LOGIC -->
+    <script type="module">
+        import { auth, db } from './config.js'; 
+        import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
+        import { collection, query, orderBy, onSnapshot, doc, updateDoc, addDoc, getDoc, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
+
+        const pageLoader = document.getElementById('pageLoader');
+        const ticketListEl = document.getElementById('ticketList');
+        const chatHistoryEl = document.getElementById('chatHistory');
+        const emptyState = document.getElementById('emptyState');
+        const chatView = document.getElementById('chatView');
+        const chatPane = document.getElementById('chatPane');
+        const unreadCounter = document.getElementById('unreadCounter');
+        
+        // Drawer Elements
+        const menuTrigger = document.getElementById('menuTrigger');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const sideDrawer = document.getElementById('sideDrawer');
+        const drawerName = document.getElementById('drawerName');
+        const drawerAvatar = document.getElementById('drawerAvatar');
+        const menuBadge = document.getElementById('menuBadge');
+        const drawerMsgBadge = document.getElementById('drawerMsgBadge');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Chat Elements
+        const displaySubject = document.getElementById('displaySubject');
+        const displayUser = document.getElementById('displayUser');
+        const resolveBtn = document.getElementById('resolveBtn');
+        const resolvedBanner = document.getElementById('resolvedBanner');
+        const inputBox = document.getElementById('inputBox');
+        const replyInput = document.getElementById('replyInput');
+        const contextMenu = document.getElementById('contextMenu');
+
+        let allTickets = [];
+        let currentTicketId = null;
+        let currentFilter = 'all';
+        let messagesUnsub = null;
+        
+        let selectedMessageId = null;
+        let selectedMessageText = "";
+
+        // 1. Auth Check
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (!userDoc.exists() || (userDoc.data().role !== 'admin' && userDoc.data().isAdmin !== true)) {
+                        window.location.href = "signin.html";
+                        return;
+                    }
+                    
+                    // Set Profile Info
+                    const userData = userDoc.data();
+                    const initial = (userData.fullName || 'A').charAt(0).toUpperCase();
+                    drawerName.textContent = userData.fullName || "Admin";
+                    drawerAvatar.textContent = initial;
+
+                    loadTickets();
+                } catch(e) { window.location.href = "signin.html"; }
+                pageLoader.style.display = 'none';
+            } else {
+                window.location.href = "signin.html";
+            }
+        });
+
+        // 2. Load Tickets (Real-time)
+        function loadTickets() {
+            const q = query(collection(db, "support_tickets"), orderBy("lastUpdated", "desc"));
+
+            onSnapshot(q, (snapshot) => {
+                allTickets = [];
+                let unreadCount = 0;
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    allTickets.push({ id: docSnap.id, ...data });
+                    if(data.hasUnreadAdmin && data.status !== 'resolved') unreadCount++;
+                });
+
+                if(unreadCount > 0) {
+                    unreadCounter.textContent = `${unreadCount} New`;
+                    unreadCounter.style.display = 'inline-block';
+                    menuBadge.classList.add('show');
+                    drawerMsgBadge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                    drawerMsgBadge.classList.add('show');
+                } else {
+                    unreadCounter.style.display = 'none';
+                    menuBadge.classList.remove('show');
+                    drawerMsgBadge.classList.remove('show');
+                }
+                renderTickets();
+            });
+        }
+
+        // 3. Render Ticket List (GROUPED)
+        window.filterTickets = (filter, btn) => {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderTickets();
+        };
+
+        function renderTickets() {
+            ticketListEl.innerHTML = '';
+            
+            const unreadTickets = [];
+            const otherTickets = [];
+
+            allTickets.forEach(t => {
+                if(currentFilter === 'open' && t.status !== 'open') return;
+                if(currentFilter === 'resolved' && t.status !== 'resolved') return;
+
+                if(t.hasUnreadAdmin === true && t.status !== 'resolved') {
+                    unreadTickets.push(t);
+                } else {
+                    otherTickets.push(t);
+                }
+            });
+
+            if (unreadTickets.length === 0 && otherTickets.length === 0) {
+                ticketListEl.innerHTML = `
+                <div style="padding:40px; text-align:center; color:#94a3b8;">
+                    <i class="fas fa-clipboard-check" style="font-size:2.5rem; margin-bottom:15px; color:#cbd5e1;"></i>
+                    <p style="font-weight:600;">No tickets found.</p>
+                </div>`;
+                return;
+            }
+
+            if(unreadTickets.length > 0) {
+                const grp = document.createElement('div');
+                grp.className = 'list-group-header';
+                grp.innerHTML = '<i class="fas fa-envelope" style="color:#ef4444"></i> Unread Messages';
+                ticketListEl.appendChild(grp);
+                unreadTickets.forEach(t => renderTicketItem(t));
+            }
+
+            if(otherTickets.length > 0) {
+                const grp = document.createElement('div');
+                grp.className = 'list-group-header';
+                grp.innerHTML = '<i class="fas fa-inbox" style="color:#64748b"></i> All Tickets';
+                ticketListEl.appendChild(grp);
+                otherTickets.forEach(t => renderTicketItem(t));
+            }
+        }
+
+        function renderTicketItem(ticket) {
+            const isActive = (currentTicketId === ticket.id) ? 'active' : '';
+            const isUnread = (ticket.hasUnreadAdmin && ticket.status !== 'resolved') ? 'unread' : '';
+            const statusColor = ticket.status === 'resolved' ? 'dot-resolved' : 'dot-open';
+            
+            let timeStr = 'New';
+            if(ticket.lastUpdated) {
+                const date = new Date(ticket.lastUpdated.seconds * 1000);
+                const now = new Date();
+                if(date.toDateString() === now.toDateString()) {
+                    timeStr = date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                } else {
+                    timeStr = date.toLocaleDateString([], {month:'short', day:'numeric'});
+                }
+            }
+
+            const codeBadge = ticket.ticketCode ? `<span class="t-code">${ticket.ticketCode}</span>` : '';
+
+            const div = document.createElement('div');
+            div.className = `ticket-item ${isActive} ${isUnread}`;
+            div.onclick = () => openTicket(ticket.id);
+            div.innerHTML = `
+                <div class="t-subject">
+                    <span class="status-dot ${statusColor}"></span>${ticket.subject}
+                </div>
+                <div class="t-meta">
+                    <span style="font-weight:600;">${ticket.userEmail ? ticket.userEmail.split('@')[0] : 'User'} ${codeBadge}</span>
+                    <span>${timeStr}</span>
+                </div>
+            `;
+            ticketListEl.appendChild(div);
+        }
+
+        // 4. Open Ticket & Load Chat
+        window.openTicket = async (ticketId) => {
+            currentTicketId = ticketId;
+            const ticket = allTickets.find(t => t.id === ticketId);
+            
+            if(ticket.hasUnreadAdmin) {
+                try { updateDoc(doc(db, "support_tickets", ticketId), { hasUnreadAdmin: false }); } catch(e) {}
+            }
+            
+            displaySubject.innerHTML = `${ticket.subject} <span class="t-code">${ticket.ticketCode || ''}</span>`;
+            displayUser.textContent = ticket.userEmail || "Anonymous";
+            
+            updateResolveUI(ticket.status);
+
+            emptyState.style.display = 'none';
+            chatView.classList.add('active');
+            chatPane.classList.add('mobile-show');
+
+            loadConversation(ticketId);
+        };
+
+        function loadConversation(ticketId) {
+            if(messagesUnsub) messagesUnsub();
+
+            const q = query(
+                collection(db, `support_tickets/${ticketId}/messages`), 
+                orderBy("createdAt", "asc")
+            );
+
+            messagesUnsub = onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
+                chatHistoryEl.innerHTML = '';
+                snapshot.forEach(docSnap => {
+                    renderMessageBubble(docSnap.data(), docSnap.id);
+                });
+                scrollToBottom();
+            });
+        }
+
+        function renderMessageBubble(msg, msgId) {
+            const div = document.createElement('div');
+            let type = 'bubble-user';
+            
+            if(msg.sender === 'admin') type = 'bubble-admin';
+            else if(msg.sender === 'bot') type = 'bubble-bot';
+
+            div.className = `msg-bubble ${type}`;
+            div.dataset.id = msgId;
+            
+            let timeStr = '...';
+            if (msg.createdAt) {
+                const seconds = msg.createdAt.seconds || (msg.createdAt.getTime && msg.createdAt.getTime() / 1000);
+                if (seconds) timeStr = new Date(seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            }
+
+            div.innerHTML = `
+                ${msg.text}
+                <span class="msg-time">${timeStr}</span>
+            `;
+
+            let pressTimer;
+            const startPress = (e) => {
+                pressTimer = window.setTimeout(() => showContextMenu(div, msgId, msg.text, e), 600);
+            };
+            const cancelPress = () => clearTimeout(pressTimer);
+
+            div.addEventListener('mousedown', startPress);
+            div.addEventListener('touchstart', startPress);
+            div.addEventListener('mouseup', cancelPress);
+            div.addEventListener('touchend', cancelPress);
+            div.addEventListener('contextmenu', (e) => { 
+                e.preventDefault(); 
+                showContextMenu(div, msgId, msg.text, e);
+            });
+
+            chatHistoryEl.appendChild(div);
+        }
+
+        function showContextMenu(element, msgId, text, e) {
+            selectedMessageId = msgId;
+            selectedMessageText = text;
+
+            const rect = element.getBoundingClientRect();
+            let top, left;
+
+            if(e && e.touches && e.touches[0]) {
+                top = e.touches[0].clientY;
+                left = e.touches[0].clientX;
+            } else if (e && e.clientY) {
+                top = e.clientY;
+                left = e.clientX;
+            } else {
+                top = rect.top + (rect.height/2);
+                left = rect.left + (rect.width/2);
+            }
+
+            if(left + 160 > window.innerWidth) left = window.innerWidth - 170;
+            if(top + 100 > window.innerHeight) top = top - 80; // Flip up if too low
+
+            contextMenu.style.top = `${top}px`;
+            contextMenu.style.left = `${left}px`;
+            contextMenu.style.display = 'block';
+
+            setTimeout(() => document.addEventListener('click', closeContextMenu), 100);
+        }
+
+        function closeContextMenu() {
+            contextMenu.style.display = 'none';
+            document.removeEventListener('click', closeContextMenu);
+        }
+
+        window.copyMessage = () => {
+            navigator.clipboard.writeText(selectedMessageText);
+            closeContextMenu();
+        };
+
+        window.deleteMessage = async () => {
+            if(!confirm("Delete this message?")) return;
+            try {
+                await deleteDoc(doc(db, `support_tickets/${currentTicketId}/messages`, selectedMessageId));
+            } catch(e) { console.error(e); }
+            closeContextMenu();
+        };
+
+        window.sendReply = async () => {
+            const text = replyInput.value.trim();
+            if(!text || !currentTicketId) return;
+
+            const btn = document.getElementById('sendBtn');
+            btn.disabled = true;
+
+            try {
+                await addDoc(collection(db, `support_tickets/${currentTicketId}/messages`), {
+                    text: text,
+                    sender: 'admin',
+                    createdAt: serverTimestamp()
+                });
+                await updateDoc(doc(db, "support_tickets", currentTicketId), {
+                    lastUpdated: serverTimestamp(),
+                    status: 'open',
+                    hasUnreadAdmin: false,
+                    hasUnreadUser: true, // Notify user
+                    snippet: text.substring(0, 50)
+                });
+                replyInput.value = '';
+            } catch(e) { console.error(e); }
+            finally { btn.disabled = false; scrollToBottom(); }
+        };
+
+        replyInput.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') sendReply();
+        });
+
+        window.toggleResolve = async () => {
+            if(!currentTicketId) return;
+            const ticket = allTickets.find(t => t.id === currentTicketId);
+            const newStatus = ticket.status === 'resolved' ? 'open' : 'resolved';
+            try {
+                await updateDoc(doc(db, "support_tickets", currentTicketId), { status: newStatus });
+                updateResolveUI(newStatus);
+            } catch(e) { console.error(e); }
+        };
+
+        function updateResolveUI(status) {
+            const icon = resolveBtn.querySelector('i');
+            if(status === 'resolved') {
+                resolveBtn.classList.add('is-resolved');
+                resolveBtn.innerHTML = `<i class="fas fa-undo"></i> Re-open Ticket`;
+                resolvedBanner.style.display = 'block';
+                inputBox.style.display = 'none';
+            } else {
+                resolveBtn.classList.remove('is-resolved');
+                resolveBtn.innerHTML = `<i class="fas fa-check"></i> Mark Resolved`;
+                resolvedBanner.style.display = 'none';
+                inputBox.style.display = 'flex';
+            }
+        }
+
+        function scrollToBottom() {
+            chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+        }
+
+        window.closeMobileView = () => {
+            chatPane.classList.remove('mobile-show');
+            
+            setTimeout(() => {
+                if(messagesUnsub) messagesUnsub();
+                currentTicketId = null;
+                chatView.classList.remove('active');
+                emptyState.style.display = 'flex';
+                renderTickets();
+            }, 300);
+        };
+
+        // --- DRAWER LOGIC ---
+        function toggleDrawer() {
+            sideDrawer.classList.toggle('active');
+            menuOverlay.classList.toggle('active');
+        }
+
+        function closeDrawer() {
+            sideDrawer.classList.remove('active');
+            menuOverlay.classList.remove('active');
+        }
+
+        menuTrigger.addEventListener('click', toggleDrawer);
+        menuOverlay.addEventListener('click', closeDrawer);
+        
+        sideDrawer.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', closeDrawer);
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            await signOut(auth);
+            window.location.href = "signin.html";
+        });
+
+    </script>
+</body>
+</html>

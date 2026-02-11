@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Analytics & Reports | Hatua Admin</title>
+    <meta name="theme-color" content="#1A1A1A">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/images/icon-192.png">
+
+    <!-- Font Awesome & Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js & jsPDF -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        :root {
+            /* HATUA BRANDING */
+            --primary-dark: #1A1A1A;    /* Charcoal */
+            --primary-light: #F8FAFC;   /* Off-white background */
+            --accent-gold: #D4AF37;     /* Gold */
+            --accent-gold-dim: #F9F1D8; /* Light Gold BG */
+            
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #F8FAFC;
+            --surface-white: #ffffff;
+            
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-main);
+            background: url('assets/images/background.png') repeat, var(--bg-body);
+            background-size: 300px;
+            min-height: 100vh;
+            padding-bottom: 40px; 
+            overflow-x: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        /* HEADER */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--glass-bg); backdrop-filter: blur(12px);
+            padding: 10px 5%; height: 70px;
+            z-index: 1000; box-shadow: var(--shadow-sm); border-bottom: 1px solid rgba(0,0,0,0.03);
+            position: fixed; top: 0; left: 0; right: 0;
+        }
+
+        .logo-con { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-con img { height: 35px; width: auto; }
+        .logo-text { font-size: 1.2rem; font-weight: 700; color: var(--primary-dark); font-family: 'Playfair Display', serif; }
+        .badge-admin { 
+            background: var(--primary-dark); color: var(--accent-gold); border: 1px solid var(--accent-gold);
+            padding: 2px 8px; border-radius: 4px; font-size: 0.6rem; font-weight: 700; 
+            text-transform: uppercase; margin-left: 5px; letter-spacing: 1px;
+        }
+
+        /* HAMBURGER */
+        .hamburger-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(26, 26, 26, 0.05); color: var(--primary-dark);
+            border: none; cursor: pointer; display: grid; place-items: center;
+            font-size: 1.2rem; transition: var(--transition);
+        }
+        .hamburger-btn:hover { background: rgba(212, 175, 55, 0.1); color: var(--accent-gold); transform: rotate(90deg); }
+
+        /* DRAWER */
+        .menu-overlay {
+            position: fixed; inset: 0; background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(4px); z-index: 2000; opacity: 0; pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .menu-overlay.active { opacity: 1; pointer-events: all; }
+
+        .side-drawer {
+            position: fixed; top: 0; right: 0; bottom: 0;
+            width: 85%; max-width: 320px;
+            background: #fff; z-index: 2001;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column;
+            border-left: 4px solid var(--accent-gold);
+        }
+        .side-drawer.active { transform: translateX(0); }
+
+        .drawer-header { 
+            padding: 30px 25px 25px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 15px; 
+            background: #fff;
+        }
+        .drawer-avatar { width: 50px; height: 50px; background: var(--primary-dark); color: var(--accent-gold); border-radius: 50%; display: grid; place-items: center; font-size: 1.2rem; font-weight: 700; border: 2px solid var(--accent-gold); }
+        .drawer-user h4 { font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 2px; font-weight: 700; }
+        .drawer-user p { font-size: 0.75rem; color: var(--accent-gold); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+        .drawer-links { padding: 20px 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .drawer-item { 
+            padding: 12px 20px; border-radius: 12px; text-decoration: none; color: #475569; 
+            font-weight: 600; display: flex; align-items: center; gap: 15px; transition: 0.2s; font-size: 0.95rem;
+        }
+        .drawer-item i { width: 20px; text-align: center; color: #94a3b8; transition: 0.2s; font-size: 1.1rem; }
+        
+        .drawer-item:hover, .drawer-item.active { background: var(--accent-gold-dim); color: var(--primary-dark); }
+        .drawer-item:hover i, .drawer-item.active i { color: var(--accent-gold); }
+        .drawer-item.active { border: 1px solid rgba(212, 175, 55, 0.2); }
+
+        .drawer-footer { padding: 20px 25px; border-top: 1px solid #f1f5f9; background: #fff; }
+        .drawer-logout { 
+            width: 100%; padding: 14px; background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2;
+            border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; 
+            justify-content: center; gap: 10px; transition: 0.2s; font-family: var(--font-main);
+        }
+        .drawer-logout:hover { background: #fee2e2; border-color: #fecaca; }
+
+
+        /* CONTENT */
+        .container { 
+            margin-top: 90px; 
+            padding: 0 5%; 
+            max-width: 1200px; 
+            margin-left: auto; 
+            margin-right: auto;
+            width: 100%; /* Ensure container respects width */
+            overflow: hidden; /* Prevent horizontal scroll */
+        }
+        
+        .page-header { margin-bottom: 30px; animation: slideUp 0.4s ease-out; }
+        .page-title { font-size: 2rem; font-family: 'Playfair Display', serif; color: var(--primary-dark); font-weight: 700; margin-bottom: 8px; }
+        .page-sub { color: #64748b; font-size: 1rem; }
+
+        /* FIXED CONTROLS / FILTERS */
+        .controls { 
+            display: flex; 
+            gap: 15px; 
+            margin-bottom: 30px; 
+            flex-wrap: wrap; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 20px; 
+            box-shadow: var(--shadow-sm); 
+            align-items: center; 
+            animation: slideUp 0.5s ease-out;
+            border: 1px solid rgba(0,0,0,0.04); 
+            border-left: 6px solid var(--accent-gold);
+            width: 100%; /* Force width */
+            box-sizing: border-box; /* Include padding in width */
+        }
+        
+        .sel-filter { 
+            flex: 1; 
+            min-width: 160px;
+            padding: 16px; 
+            border-radius: 12px; 
+            border: 1px solid #cbd5e1; 
+            background: #f8fafc; 
+            font-size: 0.95rem; 
+            outline: none; 
+            font-family: inherit; 
+            transition: 0.2s;
+            cursor: pointer;
+            width: 100%; /* Ensure it fills space on mobile */
+            box-sizing: border-box; /* Fix padding overflow */
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
+        .sel-filter:focus { border-color: var(--accent-gold); background-color: #fff; box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); }
+
+        .btn-export { 
+            background: var(--primary-dark); 
+            color: var(--accent-gold); 
+            border: 2px solid var(--primary-dark); 
+            padding: 16px 28px; 
+            border-radius: 50px; 
+            font-weight: 700; 
+            font-size: 0.95rem; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            gap: 10px; 
+            margin-left: auto;
+            white-space: nowrap; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+            transition: 0.2s; 
+            font-family: inherit;
+        }
+        .btn-export:hover { transform: translateY(-3px); background: #000; box-shadow: 0 8px 25px rgba(0,0,0,0.3); border-color: var(--accent-gold); }
+
+        /* KPIs Grid */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-bottom: 40px; animation: slideUp 0.6s ease-out; }
+        
+        .kpi-card { 
+            background: white; border-radius: 24px; padding: 25px; 
+            box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; transition: transform 0.2s;
+            border-top: 4px solid transparent; position: relative; overflow: hidden;
+        }
+        .kpi-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-top-color: var(--accent-gold); }
+        
+        .kpi-head { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center; }
+        .kpi-title { font-weight: 800; color: #94a3b8; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+        .kpi-icon { 
+            width: 45px; height: 45px; border-radius: 12px; background: var(--primary-dark); 
+            display: grid; place-items: center; color: var(--accent-gold); font-size: 1.2rem; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        
+        .kpi-val { font-size: 2.5rem; font-weight: 800; color: var(--primary-dark); font-family: 'Playfair Display', serif; margin: 10px 0; }
+        .kpi-sub { color: #64748b; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .kpi-trend { font-weight: 700; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; border: 1px solid transparent; }
+        .trend-up { background: #f0fdf4; color: #166534; border-color: #dcfce7; }
+        
+        /* Charts Section */
+        .chart-section { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; margin-bottom: 40px; animation: slideUp 0.7s ease-out; }
+        .chart-card { background: white; border-radius: 24px; padding: 30px; box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.05); }
+        .chart-head { margin-bottom: 25px; font-weight: 800; color: var(--primary-dark); font-size: 1.2rem; font-family: 'Playfair Display', serif; }
+        .chart-wrap { position: relative; height: 320px; width: 100%; }
+
+        /* Table */
+        .table-wrap { background: white; border-radius: 24px; overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.05); animation: slideUp 0.8s ease-out; }
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        
+        th { text-align: left; padding: 20px 25px; background: #f8fafc; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 22px 25px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; color: #334155; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fdfdfd; }
+        
+        .status-badge { padding: 6px 14px; border-radius: 30px; font-size: 0.75rem; font-weight: 700; background: #dcfce7; color: #166534; letter-spacing: 0.5px; text-transform: uppercase; border: 1px solid #bbf7d0; }
+
+        #page-loader { position: fixed; inset: 0; background: #fff; z-index: 2000; display: flex; justify-content: center; align-items: center; }
+        .spinner { width: 45px; height: 45px; border: 4px solid #e2e8f0; border-top: 4px solid var(--accent-gold); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media(max-width: 900px) {
+            .chart-section { grid-template-columns: 1fr; }
+        }
+        
+        /* FIX FOR MOBILE LAYOUT */
+        @media(max-width: 650px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 15px; /* Slightly reduce padding on mobile */
+            }
+            
+            .sel-filter {
+                width: 100%;
+                flex: none; /* Disable flex growing logic */
+                margin-bottom: 0; /* Let gap handle spacing */
+            }
+
+            .btn-export { 
+                width: 100%;
+                margin-left: 0;
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="page-loader"><div class="spinner"></div></div>
+
+    <!-- HEADER -->
+    <header id="header">
+        <a href="admin-dashboard.html" class="logo-con">
+            <img src="assets/images/logo.png" alt="Logo">
+            <span class="logo-text">Hatua</span>
+            <span class="badge-admin">Admin</span>
+        </a>
+        <button class="hamburger-btn" id="menuTrigger">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- DRAWER -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+    <aside class="side-drawer" id="sideDrawer">
+        <div class="drawer-header">
+            <div class="drawer-avatar" id="drawerAvatar">A</div>
+            <div class="drawer-user">
+                <h4 id="drawerName">Admin</h4>
+                <p>Super User</p>
+            </div>
+        </div>
+        
+        <!-- UPDATED NAVIGATION -->
+        <div class="drawer-links">
+            <a href="admin-dashboard.html" class="drawer-item"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="admin-users.html" class="drawer-item"><i class="fas fa-users"></i> Manage Users</a>
+            <a href="admin-apps.html" class="drawer-item"><i class="fas fa-clipboard-list"></i> Applications</a>
+            <a href="admin-testimonials.html" class="drawer-item"><i class="fas fa-comment-alt"></i> Testimonials</a>
+            <a href="admin-post-job.html" class="drawer-item"><i class="fas fa-plus-circle"></i> Post Job</a>
+            <a href="admin-manage-job.html" class="drawer-item"><i class="fas fa-briefcase"></i> Manage Jobs</a>
+            <a href="admin-support.html" class="drawer-item"><i class="fas fa-headset"></i> Support</a>
+            <a href="admin-settings.html" class="drawer-item"><i class="fas fa-cogs"></i> Master Settings</a>
+            <a href="admin-logs.html" class="drawer-item"><i class="fas fa-list-alt"></i> Logs</a>
+            <a href="admin-reports.html" class="drawer-item active"><i class="fas fa-chart-line"></i> Analytics</a>
+            <a href="admin-profile.html" class="drawer-item"><i class="fas fa-user-circle"></i> Profile</a>
+        </div>
+
+        <div class="drawer-footer">
+            <button id="logoutBtn" class="drawer-logout">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Analytics & Reports</h1>
+            <p class="page-sub">Comprehensive overview of system performance and financial metrics.</p>
+        </div>
+        
+        <div class="controls">
+            <select class="sel-filter" id="timeRangeFilter">
+                <option value="30">Last 30 Days</option>
+                <option value="90">Last 3 Months</option>
+                <option value="365">Last Year</option>
+                <option value="all">All Time</option>
+            </select>
+            <select class="sel-filter" id="catFilter">
+                <option value="all">All Categories</option>
+                <option value="tech">Technology</option>
+                <option value="finance">Finance</option>
+                <option value="hr">HR</option>
+            </select>
+            <button class="btn-export" id="exportBtn">
+                <i class="fas fa-file-download"></i> Export PDF Report
+            </button>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-head"><span class="kpi-title">Total Revenue</span> <div class="kpi-icon"><i class="fas fa-coins"></i></div></div>
+                <div class="kpi-val" id="kpiRevenue">---</div>
+                <div class="kpi-sub"><span class="kpi-trend trend-up"><i class="fas fa-arrow-up"></i> 12%</span> vs previous period</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-head"><span class="kpi-title">Success Rate</span> <div class="kpi-icon"><i class="fas fa-bullseye"></i></div></div>
+                <div class="kpi-val" id="kpiPlacement">---%</div>
+                <div class="kpi-sub">Applicants Hired</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-head"><span class="kpi-title">Total Users</span> <div class="kpi-icon"><i class="fas fa-users"></i></div></div>
+                <div class="kpi-val" id="kpiUsers">---</div>
+                <div class="kpi-sub">Registered candidates</div>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <div class="chart-card">
+                <div class="chart-head">Revenue Growth</div>
+                <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-head">Job Distribution</div>
+                <div class="chart-wrap"><canvas id="categoryChart"></canvas></div>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <div class="table-responsive">
+                <table id="dataTable">
+                    <thead><tr><th>Date</th><th>Job Title</th><th>Company</th><th>Amount</th><th>Status</th></tr></thead>
+                    <tbody id="tableBody"><tr><td colspan="5" style="text-align:center; padding:30px;">Loading data...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db } from './config.js'; 
+        import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
+        import { collection, getDocs, query, orderBy, getDoc, doc } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
+
+        // 1. DRAWER LOGIC
+        const menuTrigger = document.getElementById('menuTrigger');
+        const sideDrawer = document.getElementById('sideDrawer');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const drawerName = document.getElementById('drawerName');
+        const drawerAvatar = document.getElementById('drawerAvatar');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        function toggleDrawer() {
+            sideDrawer.classList.toggle('active');
+            menuOverlay.classList.toggle('active');
+        }
+        menuTrigger.addEventListener('click', toggleDrawer);
+        menuOverlay.addEventListener('click', toggleDrawer);
+        document.querySelectorAll('.drawer-item').forEach(l => l.addEventListener('click', toggleDrawer));
+
+        logoutBtn.addEventListener('click', async () => {
+            await signOut(auth);
+            window.location.href = "signin.html";
+        });
+
+        // 2. DATA LOGIC
+        const kpiRevenue = document.getElementById('kpiRevenue');
+        const kpiPlacement = document.getElementById('kpiPlacement');
+        const kpiUsers = document.getElementById('kpiUsers');
+        const tableBody = document.getElementById('tableBody');
+        const exportBtn = document.getElementById('exportBtn');
+        const timeFilter = document.getElementById('timeRangeFilter');
+        const loader = document.getElementById('page-loader');
+
+        let allJobs = [], allApps = [], allUsers = [];
+        let revChart = null, catChart = null;
+        let currentUserEmail = "";
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists() && (userDoc.data().role === 'admin' || userDoc.data().isAdmin)) {
+                    const data = userDoc.data();
+                    drawerName.textContent = data.fullName || "Admin";
+                    drawerAvatar.textContent = (data.fullName || 'A').charAt(0).toUpperCase();
+                    currentUserEmail = user.email;
+
+                    await loadData();
+                    loader.style.display = 'none';
+                } else { window.location.href = "signin.html"; }
+            } else { window.location.href = "signin.html"; }
+        });
+
+        async function loadData() {
+            try {
+                const [jobsSnap, appsSnap, usersSnap] = await Promise.all([
+                    getDocs(query(collection(db, "jobs"), orderBy("createdAt", "desc"))),
+                    getDocs(collection(db, "applications")),
+                    getDocs(collection(db, "users"))
+                ]);
+                
+                allJobs = jobsSnap.docs.map(d => ({id: d.id, ...d.data()}));
+                allApps = appsSnap.docs.map(d => d.data());
+                allUsers = usersSnap.docs.map(d => d.data());
+                
+                updateView();
+            } catch(e) { console.error(e); }
+        }
+
+        function updateView() {
+            const days = timeFilter.value === 'all' ? 3650 : parseInt(timeFilter.value);
+            const cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - days);
+
+            const filteredJobs = allJobs.filter(j => j.createdAt && new Date(j.createdAt.seconds*1000) >= cutoff);
+
+            // KPIs
+            const revenue = filteredJobs.reduce((sum, j) => sum + (parseFloat(j.price)||0), 0);
+            kpiRevenue.textContent = `KES ${revenue.toLocaleString()}`;
+            kpiUsers.textContent = allUsers.length;
+            
+            const hired = allApps.filter(a => ['Hired', 'Accepted'].includes(a.status)).length;
+            const rate = allApps.length ? ((hired/allApps.length)*100).toFixed(1) : 0;
+            kpiPlacement.textContent = `${rate}%`;
+
+            // Table
+            renderTable(filteredJobs);
+            
+            // Charts
+            renderCharts(filteredJobs);
+        }
+
+        function renderTable(jobs) {
+            tableBody.innerHTML = jobs.length ? '' : '<tr><td colspan="5" style="text-align:center; padding:30px; color:#94a3b8;">No transaction data found for this period.</td></tr>';
+            jobs.slice(0, 50).forEach(j => {
+                const date = j.createdAt ? new Date(j.createdAt.seconds*1000).toLocaleDateString() : '-';
+                const html = `<tr><td>${date}</td><td><strong>${j.title}</strong></td><td>${j.company}</td><td>${(parseFloat(j.price)||0).toLocaleString()}</td><td><span class="status-badge">Completed</span></td></tr>`;
+                tableBody.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        function renderCharts(jobs) {
+            // Line Chart: Revenue
+            const ctxRev = document.getElementById('revenueChart').getContext('2d');
+            const dateMap = {};
+            jobs.forEach(j => {
+                const k = new Date(j.createdAt.seconds*1000).toLocaleDateString(undefined, {month:'short', day:'numeric'});
+                dateMap[k] = (dateMap[k]||0) + (parseFloat(j.price)||0);
+            });
+            const labelsRev = Object.keys(dateMap).reverse(); // Oldest to newest
+            const dataRev = Object.values(dateMap).reverse();
+
+            if(revChart) revChart.destroy();
+            revChart = new Chart(ctxRev, {
+                type: 'line',
+                data: {
+                    labels: labelsRev,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: dataRev,
+                        borderColor: '#D4AF37', /* Gold */
+                        backgroundColor: (context) => {
+                            const ctx = context.chart.ctx;
+                            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                            gradient.addColorStop(0, 'rgba(212, 175, 55, 0.2)');
+                            gradient.addColorStop(1, 'rgba(212, 175, 55, 0.0)');
+                            return gradient;
+                        },
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#D4AF37'
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { beginAtZero: true, grid: { borderDash: [5, 5], color: '#f1f5f9' } }
+                    }
+                }
+            });
+
+            // Pie Chart: Categories (Simulated based on Titles)
+            const ctxCat = document.getElementById('categoryChart').getContext('2d');
+            const catCount = { 'Tech': 0, 'Finance': 0, 'HR': 0, 'Other': 0 };
+            
+            jobs.forEach(j => {
+                const t = (j.title || '').toLowerCase();
+                if(t.includes('developer') || t.includes('engineer') || t.includes('it')) catCount['Tech']++;
+                else if(t.includes('accountant') || t.includes('manager') || t.includes('analyst')) catCount['Finance']++;
+                else if(t.includes('hr') || t.includes('recruit')) catCount['HR']++;
+                else catCount['Other']++;
+            });
+
+            if(catChart) catChart.destroy();
+            catChart = new Chart(ctxCat, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(catCount),
+                    datasets: [{
+                        data: Object.values(catCount),
+                        backgroundColor: ['#1A1A1A', '#D4AF37', '#64748B', '#E2E8F0'], // Charcoal, Gold, Slate, Light Gray
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } }
+                }
+            });
+        }
+
+        timeFilter.addEventListener('change', updateView);
+
+        // PDF Export
+        exportBtn.addEventListener('click', () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFillColor(26, 26, 26); // Charcoal bg for header
+            doc.rect(0, 0, 210, 40, 'F');
+            doc.setTextColor(212, 175, 55); // Gold Text
+            doc.setFontSize(22); doc.setFont("helvetica", "bold");
+            doc.text("Hatua Analytics Report", 14, 25);
+            
+            doc.setTextColor(255, 255, 255); // White Text
+            doc.setFontSize(10); doc.setFont("helvetica", "normal");
+            doc.text(`Generated by: ${currentUserEmail} | ${new Date().toLocaleDateString()}`, 14, 34);
+            
+            // Add Stats Summary
+            doc.setTextColor(26, 26, 26); // Charcoal text body
+            doc.setFontSize(14); doc.setFont("helvetica", "bold");
+            doc.text("Executive Summary", 14, 55);
+            
+            doc.setFontSize(10); doc.setFont("helvetica", "normal");
+            doc.text(`Total Revenue: ${kpiRevenue.textContent}`, 14, 65);
+            doc.text(`Success Rate: ${kpiPlacement.textContent}`, 80, 65);
+            doc.text(`Total Users: ${kpiUsers.textContent}`, 150, 65);
+
+            const rows = allJobs.slice(0, 50).map(j => [
+                j.createdAt ? new Date(j.createdAt.seconds*1000).toLocaleDateString() : '-',
+                j.title, j.company, (parseFloat(j.price)||0).toLocaleString()
+            ]);
+            
+            doc.autoTable({
+                head: [['Date', 'Job Title', 'Company', 'Revenue (KES)']],
+                body: rows,
+                startY: 75,
+                theme: 'striped',
+                headStyles: { fillColor: [26, 26, 26] } // Charcoal Header
+            });
+            doc.save('Hatua_Analytics_Report.pdf');
+        });
+    </script>
+</body>
+</html>

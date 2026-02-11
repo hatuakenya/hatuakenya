@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Manage Testimonials | Hatua Admin</title>
+    <meta name="theme-color" content="#1A1A1A">
+
+    <!-- PWA Manifest & Meta -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/images/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/images/icon-192.png">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* HATUA BRANDING */
+            --primary-dark: #1A1A1A;    /* Charcoal */
+            --primary-light: #F8FAFC;   /* Off-white background */
+            --accent-gold: #D4AF37;     /* Gold */
+            --accent-gold-dim: #F9F1D8; /* Light Gold BG */
+            
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #F8FAFC;
+            --surface-white: #ffffff;
+            --danger-red: #ef4444;
+            --success-green: #10b981;
+            
+            --shadow-subtle: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-elevated: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * {margin:0;padding:0;box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-main);
+            background: url('assets/images/background.png') repeat, var(--bg-body);
+            background-size: 300px;
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            padding-bottom: 40px;
+        }
+
+        /* ---- HEADER ---- */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--glass-bg); backdrop-filter: blur(12px);
+            padding: 10px 5%; height: 70px;
+            z-index: 1000; box-shadow: var(--shadow-subtle); border-bottom: 1px solid rgba(0,0,0,0.03);
+            position: fixed; top: 0; left: 0; right: 0;
+        }
+        
+        .logo-con { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-con img { height: 35px; width: auto; }
+        .logo-text { font-size: 1.2rem; font-weight: 700; color: var(--primary-dark); font-family: 'Playfair Display', serif; }
+        .admin-badge {
+            background: var(--primary-dark); color: var(--accent-gold); border: 1px solid var(--accent-gold);
+            padding: 2px 8px; border-radius: 4px; font-size: 0.6rem; font-weight: 700; 
+            text-transform: uppercase; margin-left: 5px; letter-spacing: 1px;
+        }
+
+        /* HAMBURGER */
+        .hamburger-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(26, 26, 26, 0.05); color: var(--primary-dark);
+            border: none; cursor: pointer; display: grid; place-items: center;
+            font-size: 1.2rem; transition: var(--transition);
+        }
+        .hamburger-btn:hover { background: rgba(212, 175, 55, 0.1); color: var(--accent-gold); transform: rotate(90deg); }
+
+        /* DRAWER */
+        .menu-overlay {
+            position: fixed; inset: 0; background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(4px); z-index: 2000; opacity: 0; pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .menu-overlay.active { opacity: 1; pointer-events: all; }
+
+        .side-drawer {
+            position: fixed; top: 0; right: 0; bottom: 0;
+            width: 85%; max-width: 320px;
+            background: #fff; z-index: 2001;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column;
+            border-left: 4px solid var(--accent-gold);
+        }
+        .side-drawer.active { transform: translateX(0); }
+
+        .drawer-header { 
+            padding: 30px 25px 25px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 15px; 
+            background: #fff;
+        }
+        .drawer-avatar { width: 50px; height: 50px; background: var(--primary-dark); color: var(--accent-gold); border-radius: 50%; display: grid; place-items: center; font-size: 1.2rem; font-weight: 700; border: 2px solid var(--accent-gold); }
+        .drawer-user h4 { font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 2px; font-weight: 700; }
+        .drawer-user p { font-size: 0.75rem; color: var(--accent-gold); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+        .drawer-links { padding: 20px 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .drawer-item { 
+            padding: 12px 20px; border-radius: 12px; text-decoration: none; color: #475569; 
+            font-weight: 600; display: flex; align-items: center; gap: 15px; transition: 0.2s; font-size: 0.95rem;
+        }
+        .drawer-item i { width: 20px; text-align: center; color: #94a3b8; transition: 0.2s; font-size: 1.1rem; }
+        
+        .drawer-item:hover, .drawer-item.active { background: var(--accent-gold-dim); color: var(--primary-dark); }
+        .drawer-item:hover i, .drawer-item.active i { color: var(--accent-gold); }
+        .drawer-item.active { border: 1px solid rgba(212, 175, 55, 0.2); }
+
+        .drawer-footer { padding: 20px 25px; border-top: 1px solid #f1f5f9; background: #fff; }
+        .drawer-logout { 
+            width: 100%; padding: 14px; background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2;
+            border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; 
+            justify-content: center; gap: 10px; transition: 0.2s; font-family: var(--font-main);
+        }
+        .drawer-logout:hover { background: #fee2e2; border-color: #fecaca; }
+
+        /* ---- MAIN CONTENT ---- */
+        .container {
+            margin-top: 90px; padding: 0 5%;
+            max-width: 1000px; margin-left: auto; margin-right: auto; width: 100%;
+        }
+
+        .page-header { 
+            margin-bottom: 30px; animation: slideUp 0.4s ease-out; 
+        }
+        .page-title { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--primary-dark); font-weight: 700; margin-bottom: 8px; }
+        .page-subtitle { color: var(--text-muted); font-size: 1rem; }
+
+        /* ---- ADD FORM CARD ---- */
+        .form-card {
+            background: var(--surface-white); border-radius: var(--radius-lg); padding: 30px;
+            box-shadow: var(--shadow-elevated); border: 1px solid rgba(0,0,0,0.04);
+            margin-bottom: 40px; animation: slideUp 0.5s ease-out; position: relative; overflow: hidden;
+            border-top: 6px solid var(--accent-gold);
+        }
+        
+        .form-header { display: flex; align-items: center; gap: 12px; margin-bottom: 25px; color: var(--primary-dark); }
+        .form-header i { font-size: 1.4rem; color: var(--accent-gold); }
+        .form-header h3 { font-size: 1.2rem; font-weight: 800; font-family: 'Playfair Display', serif; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+        .form-group { display: flex; flex-direction: column; gap: 10px; }
+        .form-group.full { grid-column: 1 / -1; }
+
+        label { font-size: 0.8rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 1px; }
+        input, textarea {
+            padding: 16px; border: 1px solid #e2e8f0; border-radius: 14px;
+            font-family: inherit; font-size: 1rem; outline: none; transition: 0.2s;
+            background: #fff; color: var(--primary-dark); font-weight: 500;
+        }
+        input:focus, textarea:focus { border-color: var(--accent-gold); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); }
+        textarea { min-height: 140px; resize: vertical; line-height: 1.6; }
+
+        .btn-submit {
+            background: var(--primary-dark); color: var(--accent-gold); border: 2px solid var(--primary-dark); padding: 16px 32px;
+            border-radius: 50px; font-weight: 700; cursor: pointer; transition: 0.2s; width: 100%;
+            display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .btn-submit:hover { background: #000; box-shadow: 0 8px 25px rgba(0,0,0,0.2); border-color: var(--accent-gold); }
+
+        /* ---- TESTIMONIALS LIST ---- */
+        .list-header { 
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; 
+            padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;
+        }
+        .list-header h3 { font-size: 1.4rem; font-weight: 800; color: var(--primary-dark); font-family: 'Playfair Display', serif; }
+        .list-count { 
+            background: var(--accent-gold-dim); color: var(--primary-dark); padding: 6px 14px; border-radius: 20px; 
+            font-size: 0.85rem; font-weight: 700; border: 1px solid var(--accent-gold);
+        }
+
+        .list-grid { 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+            gap: 25px; animation: slideUp 0.6s ease-out; 
+        }
+
+        .story-card {
+            background: var(--surface-white); border-radius: 24px; padding: 25px;
+            border: 1px solid rgba(0,0,0,0.05); box-shadow: var(--shadow-subtle);
+            display: flex; flex-direction: column; justify-content: space-between;
+            transition: var(--transition); position: relative; overflow: hidden;
+            border-top: 4px solid transparent;
+        }
+        .story-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-elevated); border-top-color: var(--accent-gold); }
+        
+        .quote-icon { position: absolute; top: 15px; right: 20px; font-size: 4rem; color: #f8fafc; font-family: serif; z-index: 0; pointer-events: none; }
+
+        .story-content { position: relative; z-index: 1; flex: 1; margin-bottom: 25px; }
+        .story-text { 
+            font-size: 1rem; color: #334155; font-style: italic; line-height: 1.6; font-family: 'Playfair Display', serif;
+        }
+
+        .story-meta { 
+            display: flex; justify-content: space-between; align-items: center; 
+            border-top: 1px solid #f1f5f9; padding-top: 15px; position: relative; z-index: 1;
+        }
+        .author-info h4 { font-size: 1rem; color: var(--primary-dark); font-weight: 700; margin-bottom: 4px; }
+        .author-info span { font-size: 0.85rem; color: var(--text-muted); display: block; }
+        
+        .btn-delete {
+            background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2; width: 40px; height: 40px;
+            border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .btn-delete:hover { background: #ef4444; color: white; border-color: #ef4444; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); }
+
+        /* Loader & Toast */
+        #page-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        .spinner { width: 45px; height: 45px; border: 4px solid #e2e8f0; border-top: 4px solid var(--accent-gold); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #toast {
+            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+            background: var(--primary-dark); color: var(--accent-gold); padding: 14px 28px; border-radius: 50px;
+            font-weight: 600; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 2000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid var(--accent-gold);
+        }
+        #toast.show { opacity: 1; bottom: 50px; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media(max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; gap: 15px; }
+            .form-card { padding: 20px; }
+            .btn-submit { padding: 14px; font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PAGE LOADER -->
+    <div id="page-loader"><div class="spinner"></div></div>
+
+    <!-- HEADER -->
+    <header id="header">
+        <a href="admin-dashboard.html" class="logo-con">
+            <img src="assets/images/logo.png" alt="Logo">
+            <span class="logo-text">Hatua</span>
+            <span class="admin-badge">Admin</span>
+        </a>
+        
+        <!-- Hamburger Trigger -->
+        <button class="hamburger-btn" id="menuTrigger">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- NAVIGATION OVERLAY & DRAWER -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+    <aside class="side-drawer" id="sideDrawer">
+        <div class="drawer-header">
+            <div class="drawer-avatar" id="drawerAvatar">A</div>
+            <div class="drawer-user">
+                <h4 id="drawerName">Admin</h4>
+                <p>Super User</p>
+            </div>
+        </div>
+        
+        <!-- UPDATED NAVIGATION -->
+        <div class="drawer-links">
+            <a href="admin-dashboard.html" class="drawer-item"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="admin-users.html" class="drawer-item"><i class="fas fa-users"></i> Manage Users</a>
+            <a href="admin-apps.html" class="drawer-item"><i class="fas fa-clipboard-list"></i> Applications</a>
+            <a href="admin-testimonials.html" class="drawer-item active"><i class="fas fa-comment-alt"></i> Testimonials</a>
+            <a href="admin-post-job.html" class="drawer-item"><i class="fas fa-plus-circle"></i> Post Job</a>
+            <a href="admin-manage-job.html" class="drawer-item"><i class="fas fa-briefcase"></i> Manage Jobs</a>
+            <a href="admin-support.html" class="drawer-item"><i class="fas fa-headset"></i> Support</a>
+            <a href="admin-settings.html" class="drawer-item"><i class="fas fa-cogs"></i> Master Settings</a>
+            <a href="admin-logs.html" class="drawer-item"><i class="fas fa-list-alt"></i> Logs</a>
+            <a href="admin-reports.html" class="drawer-item"><i class="fas fa-chart-line"></i> Analytics</a>
+            <a href="admin-profile.html" class="drawer-item"><i class="fas fa-user-circle"></i> Profile</a>
+        </div>
+
+        <div class="drawer-footer">
+            <button id="logoutBtn" class="drawer-logout">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <div class="container">
+        
+        <div class="page-header">
+            <h1 class="page-title">Manage Testimonials</h1>
+            <p class="page-subtitle">Curate success stories to build trust on the user dashboard.</p>
+        </div>
+
+        <!-- FORM: ADD TESTIMONIAL -->
+        <div class="form-card">
+            <div class="form-header">
+                <i class="fas fa-pen-nib"></i>
+                <h3>Publish New Story</h3>
+            </div>
+            
+            <form id="testimonialForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Client Name</label>
+                        <input type="text" id="tName" placeholder="e.g. John Kamau" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone (Private)</label>
+                        <input type="tel" id="tPhone" placeholder="e.g. 0712345678" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="tDate" required>
+                    </div>
+                </div>
+                <div class="form-group full" style="margin-bottom:25px;">
+                    <label>Testimony Content</label>
+                    <textarea id="tMsg" placeholder="Share the specific details of their success..." required></textarea>
+                </div>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-paper-plane"></i> Publish Testimonial
+                </button>
+            </form>
+        </div>
+
+        <!-- LIST OF EXISTING STORIES -->
+        <div class="list-header">
+            <h3>Active Stories</h3>
+            <span class="list-count" id="storyCount">0 Stories</span>
+        </div>
+
+        <div id="storiesContainer" class="list-grid">
+            <div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;">
+                <div class="spinner" style="margin:0 auto 15px; width:30px; height:30px; border-width:3px;"></div>
+                Loading content...
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast">Operation Successful</div>
+
+    <!-- FIREBASE & LOGIC -->
+    <script type="module">
+        import { auth, db } from './config.js'; 
+        import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
+        import { collection, query, orderBy, onSnapshot, doc, addDoc, deleteDoc, getDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
+
+        const testimonialForm = document.getElementById('testimonialForm');
+        const storiesContainer = document.getElementById('storiesContainer');
+        const storyCountLabel = document.getElementById('storyCount');
+        const toast = document.getElementById('toast');
+        const pageLoader = document.getElementById('page-loader');
+
+        // Drawer Elements
+        const menuTrigger = document.getElementById('menuTrigger');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const sideDrawer = document.getElementById('sideDrawer');
+        const drawerName = document.getElementById('drawerName');
+        const drawerAvatar = document.getElementById('drawerAvatar');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // 1. Auth Check
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (!userDoc.exists() || (userDoc.data().role !== 'admin' && !userDoc.data().isAdmin)) {
+                        alert("Access Denied.");
+                        window.location.href = "signin.html";
+                        return;
+                    }
+
+                    // Set Drawer Profile
+                    const userData = userDoc.data();
+                    drawerName.textContent = userData.fullName || "Admin";
+                    drawerAvatar.textContent = (userData.fullName || 'A').charAt(0).toUpperCase();
+
+                    loadTestimonials();
+                    pageLoader.style.display = 'none';
+                } catch(e) {
+                    console.error("Auth Error", e);
+                    window.location.href = "signin.html";
+                }
+            } else {
+                window.location.href = "signin.html";
+            }
+        });
+
+        // 2. Load Testimonials (Real-time)
+        function loadTestimonials() {
+            const q = query(collection(db, "testimonials"), orderBy("createdAt", "desc"));
+            
+            onSnapshot(q, (snapshot) => {
+                storiesContainer.innerHTML = '';
+                storyCountLabel.textContent = `${snapshot.size} Stories`;
+                
+                if(snapshot.empty) {
+                    storiesContainer.innerHTML = `
+                        <div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8; background:white; border-radius:20px; border:1px dashed #cbd5e1;">
+                            <i class="fas fa-quote-left" style="font-size:2rem; margin-bottom:10px; opacity:0.5;"></i>
+                            <p>No testimonials added yet.</p>
+                        </div>`;
+                    return;
+                }
+
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const id = docSnap.id;
+                    
+                    const html = `
+                        <div class="story-card">
+                            <div class="quote-icon">“</div>
+                            <div class="story-content">
+                                <div class="story-text">${data.testimony}</div>
+                            </div>
+                            <div class="story-meta">
+                                <div class="author-info">
+                                    <h4>${data.name}</h4>
+                                    <span>${data.phone || 'No Phone'} • ${data.date}</span>
+                                </div>
+                                <button class="btn-delete" onclick="deleteStory('${id}')" title="Delete Story">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    storiesContainer.insertAdjacentHTML('beforeend', html);
+                });
+            });
+        }
+
+        // 3. Add Testimonial
+        testimonialForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = testimonialForm.querySelector('.btn-submit');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<div class="spinner" style="width:20px; height:20px; border-width:2px; margin:0;"></div> Publishing...';
+            btn.disabled = true;
+
+            const name = document.getElementById('tName').value;
+            const phone = document.getElementById('tPhone').value;
+            const date = document.getElementById('tDate').value;
+            const msg = document.getElementById('tMsg').value;
+
+            try {
+                await addDoc(collection(db, "testimonials"), {
+                    name: name,
+                    phone: phone,
+                    date: date,
+                    testimony: msg,
+                    createdAt: serverTimestamp()
+                });
+
+                showToast("Testimonial Published Successfully!");
+                testimonialForm.reset();
+            } catch (error) {
+                console.error("Error adding testimonial:", error);
+                alert("Failed to add testimonial. Check console.");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // 4. Delete Testimonial
+        window.deleteStory = async (id) => {
+            if(confirm("Are you sure you want to permanently remove this story?")) {
+                try {
+                    await deleteDoc(doc(db, "testimonials", id));
+                    showToast("Story deleted");
+                } catch (error) {
+                    console.error("Delete error:", error);
+                    alert("Failed to delete.");
+                }
+            }
+        };
+
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // --- DRAWER LOGIC ---
+        function toggleDrawer() {
+            sideDrawer.classList.toggle('active');
+            menuOverlay.classList.toggle('active');
+        }
+
+        function closeDrawer() {
+            sideDrawer.classList.remove('active');
+            menuOverlay.classList.remove('active');
+        }
+
+        menuTrigger.addEventListener('click', toggleDrawer);
+        menuOverlay.addEventListener('click', closeDrawer);
+        document.querySelectorAll('.drawer-item').forEach(l => l.addEventListener('click', toggleDrawer));
+
+        logoutBtn.addEventListener('click', async () => {
+            await signOut(auth);
+            window.location.href = "signin.html";
+        });
+
+    </script>
+</body>
+</html>

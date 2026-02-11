@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>User Profile | Hatua Admin</title>
+    <meta name="theme-color" content="#1A1A1A">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/images/icon-192.png">
+
+    <!-- Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* HATUA BRANDING */
+            --primary-dark: #1A1A1A;    /* Charcoal */
+            --primary-light: #F8FAFC;   /* Off-white background */
+            --accent-gold: #D4AF37;     /* Gold */
+            --accent-gold-dim: #F9F1D8; /* Light Gold BG */
+            
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #F8FAFC;
+            --surface-white: #ffffff;
+            
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-main);
+            background: url('assets/images/background.png') repeat, var(--bg-body);
+            background-size: 300px;
+            min-height: 100vh;
+            padding-bottom: 40px;
+            overflow-x: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        /* ---- HEADER ---- */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--glass-bg); backdrop-filter: blur(12px);
+            padding: 10px 5%; height: 70px;
+            z-index: 1000; box-shadow: var(--shadow-sm); border-bottom: 1px solid rgba(0,0,0,0.03);
+            position: fixed; top: 0; left: 0; right: 0;
+        }
+        
+        .logo-con { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-con img { height: 35px; width: auto; }
+        .logo-text { font-size: 1.2rem; font-weight: 700; color: var(--primary-dark); font-family: 'Playfair Display', serif; }
+        .badge-admin { 
+            background: var(--primary-dark); color: var(--accent-gold); border: 1px solid var(--accent-gold);
+            padding: 2px 8px; border-radius: 4px; font-size: 0.6rem; font-weight: 700; 
+            text-transform: uppercase; margin-left: 5px; letter-spacing: 1px;
+        }
+
+        /* ---- HAMBURGER MENU STYLES ---- */
+        .hamburger-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(26, 26, 26, 0.05); color: var(--primary-dark);
+            border: none; cursor: pointer; display: grid; place-items: center;
+            font-size: 1.2rem; transition: var(--transition);
+            position: relative; z-index: 1002;
+        }
+        .hamburger-btn:hover { background: rgba(212, 175, 55, 0.1); color: var(--accent-gold); transform: rotate(90deg); }
+        
+        .nav-notification-dot {
+            position: absolute; top: 8px; right: 8px;
+            width: 10px; height: 10px; background: #ef4444;
+            border-radius: 50%; border: 2px solid #fff;
+            opacity: 0; transition: 0.3s; pointer-events: none;
+        }
+        .nav-notification-dot.show { opacity: 1; }
+
+        /* Menu Overlay & Drawer */
+        .menu-overlay {
+            position: fixed; inset: 0; background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            z-index: 2000; opacity: 0; pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .menu-overlay.active { opacity: 1; pointer-events: all; }
+
+        .side-drawer {
+            position: fixed; top: 0; right: 0; bottom: 0;
+            width: 85%; max-width: 320px;
+            background: #fff; z-index: 2001;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column;
+            border-left: 4px solid var(--accent-gold);
+        }
+        .side-drawer.active { transform: translateX(0); }
+
+        .drawer-header { 
+            padding: 30px 25px 25px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 15px; 
+            background: #fff;
+        }
+        .drawer-avatar { width: 50px; height: 50px; background: var(--primary-dark); color: var(--accent-gold); border-radius: 50%; display: grid; place-items: center; font-size: 1.2rem; font-weight: 700; border: 2px solid var(--accent-gold); }
+        .drawer-user h4 { font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 2px; font-weight: 700; }
+        .drawer-user p { font-size: 0.75rem; color: var(--accent-gold); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+        .drawer-links { padding: 20px 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .drawer-item { 
+            padding: 12px 20px; border-radius: 12px; text-decoration: none; color: #475569; 
+            font-weight: 600; display: flex; align-items: center; gap: 15px; transition: 0.2s; font-size: 0.95rem;
+        }
+        .drawer-item i { width: 20px; text-align: center; color: #94a3b8; transition: 0.2s; font-size: 1.1rem; }
+        
+        .drawer-item:hover, .drawer-item.active { background: var(--accent-gold-dim); color: var(--primary-dark); }
+        .drawer-item:hover i, .drawer-item.active i { color: var(--accent-gold); }
+        .drawer-item.active { border: 1px solid rgba(212, 175, 55, 0.2); }
+        
+        .drawer-badge {
+            margin-left: auto; background: #ef4444; color: #fff;
+            font-size: 0.75rem; padding: 2px 8px; border-radius: 10px;
+            opacity: 0;
+        }
+        .drawer-badge.show { opacity: 1; }
+
+        .drawer-footer { padding: 20px 25px; border-top: 1px solid #f1f5f9; background: #fff; }
+        .drawer-logout { 
+            width: 100%; padding: 14px; background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2;
+            border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; 
+            justify-content: center; gap: 10px; transition: 0.2s; font-family: var(--font-main);
+        }
+        .drawer-logout:hover { background: #fee2e2; border-color: #fecaca; }
+
+        /* ---- PROFILE CONTENT ---- */
+        .container { 
+            margin-top: 90px; padding: 0 5%; max-width: 1000px; 
+            margin-left: auto; margin-right: auto; width: 100%; 
+            animation: slideUp 0.4s ease-out;
+        }
+
+        /* Back Navigation */
+        .nav-back { 
+            display: inline-flex; align-items: center; gap: 8px; text-decoration: none; 
+            color: #64748b; font-weight: 600; margin-bottom: 25px; transition: 0.2s;
+        }
+        .nav-back:hover { color: var(--primary-dark); transform: translateX(-3px); }
+
+        /* Profile Header Card */
+        .profile-header-card {
+            background: white; border-radius: 24px; padding: 30px;
+            box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; align-items: center;
+            margin-bottom: 30px; position: relative; overflow: hidden;
+            border-top: 6px solid var(--accent-gold);
+        }
+        
+        .p-avatar-lg {
+            width: 100px; height: 100px; border-radius: 50%; background: var(--primary-dark);
+            color: var(--accent-gold); display: grid; place-items: center; font-size: 2.5rem;
+            font-weight: 700; margin-bottom: 15px; border: 3px solid var(--accent-gold-dim);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .p-name { font-size: 1.8rem; font-family: 'Playfair Display', serif; font-weight: 800; color: var(--primary-dark); margin-bottom: 5px; text-align: center; }
+        .p-email { color: #64748b; font-size: 0.95rem; font-weight: 500; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        
+        .p-badges { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        .role-badge { 
+            padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; 
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .role-admin { background: var(--primary-dark); color: var(--accent-gold); border: 1px solid var(--accent-gold); }
+        .role-user { background: #e2e8f0; color: #475569; }
+        .status-active { background: #dcfce7; color: #166534; }
+        .status-banned { background: #fee2e2; color: #991b1b; }
+
+        /* Stats Row */
+        .stats-row { 
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; 
+            margin-top: 25px; padding-top: 25px; border-top: 1px solid #f1f5f9;
+        }
+        .stat-box { text-align: center; }
+        .stat-val { font-size: 1.5rem; font-weight: 800; color: var(--primary-dark); font-family: 'Playfair Display', serif; }
+        .stat-lbl { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-top: 4px; }
+
+        /* Details Grid */
+        .details-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
+        
+        .info-card {
+            background: white; border-radius: 24px; padding: 0;
+            box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.05);
+            overflow: hidden; height: fit-content;
+        }
+        
+        .card-head { 
+            padding: 20px 25px; border-bottom: 1px solid #f1f5f9; background: #fff;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .card-title { font-size: 1.1rem; font-weight: 700; color: var(--primary-dark); display: flex; align-items: center; gap: 10px; }
+        .card-title i { color: var(--accent-gold); }
+
+        .info-list { padding: 10px 0; }
+        .info-item { 
+            padding: 15px 25px; border-bottom: 1px solid #f1f5f9; 
+            display: grid; grid-template-columns: 140px 1fr; align-items: center; gap: 15px;
+        }
+        .info-item:last-child { border-bottom: none; }
+        .info-lbl { font-size: 0.85rem; color: #94a3b8; font-weight: 600; }
+        .info-val { font-size: 0.95rem; color: #334155; font-weight: 600; word-break: break-all; }
+
+        /* Files Section */
+        .file-item { 
+            display: flex; align-items: center; justify-content: space-between; padding: 15px 25px; 
+            border-bottom: 1px solid #f1f5f9; transition: 0.2s;
+        }
+        .file-item:hover { background: #f8fafc; }
+        .file-info { display: flex; align-items: center; gap: 12px; }
+        .file-icon { 
+            width: 40px; height: 40px; background: #fee2e2; color: #ef4444; 
+            border-radius: 8px; display: grid; place-items: center; font-size: 1.2rem; 
+        }
+        .file-name { font-size: 0.9rem; font-weight: 700; color: #334155; }
+        .file-meta { font-size: 0.75rem; color: #94a3b8; }
+        .btn-dl { 
+            color: #64748b; width: 35px; height: 35px; border-radius: 50%; border: 1px solid #e2e8f0;
+            display: grid; place-items: center; transition: 0.2s; text-decoration: none;
+        }
+        .btn-dl:hover { background: var(--primary-dark); color: var(--accent-gold); border-color: var(--primary-dark); }
+
+        /* Action Buttons */
+        .action-card { padding: 25px; display: flex; flex-direction: column; gap: 15px; }
+        .act-btn { 
+            width: 100%; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: 0.2s; border: none; font-size: 0.9rem;
+        }
+        .btn-msg { background: var(--primary-dark); color: var(--accent-gold); border: 1px solid var(--accent-gold); }
+        .btn-msg:hover { background: #000; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        
+        .btn-ban { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .btn-ban:hover { background: #fecaca; }
+        
+        .btn-reset { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .btn-reset:hover { background: #e2e8f0; color: #1e293b; }
+
+        /* Loading Spinner */
+        #page-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        .spinner { width: 45px; height: 45px; border: 4px solid #e2e8f0; border-top: 4px solid var(--accent-gold); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        @media(max-width: 850px) { .details-grid { grid-template-columns: 1fr; } .stats-row { gap: 10px; } }
+        @media(max-width: 600px) { 
+            .info-item { grid-template-columns: 1fr; gap: 5px; } 
+            .info-lbl { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+            .p-name { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="page-loader"><div class="spinner"></div></div>
+
+    <!-- HEADER -->
+    <header id="header">
+        <a href="admin-dashboard.html" class="logo-con">
+            <img src="assets/images/logo.png" alt="Logo">
+            <span class="logo-text">Hatua</span>
+            <span class="badge-admin">Admin</span>
+        </a>
+        
+        <button class="hamburger-btn" id="menuTrigger">
+            <i class="fas fa-bars"></i>
+            <div class="nav-notification-dot" id="menuBadge"></div>
+        </button>
+    </header>
+
+    <!-- DRAWER -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+    <aside class="side-drawer" id="sideDrawer">
+        <div class="drawer-header">
+            <div class="drawer-avatar" id="drawerAvatar">A</div>
+            <div class="drawer-user">
+                <h4 id="drawerName">Admin</h4>
+                <p>Master Admin</p>
+            </div>
+        </div>
+        
+        <div class="drawer-links">
+            <a href="admin-dashboard.html" class="drawer-item"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="admin-users.html" class="drawer-item active"><i class="fas fa-users"></i> Manage Users</a>
+            <a href="admin-apps.html" class="drawer-item"><i class="fas fa-clipboard-list"></i> Applications</a>
+            <a href="admin-testimonials.html" class="drawer-item"><i class="fas fa-comment-alt"></i> Testimonials</a>
+            <a href="admin-post-job.html" class="drawer-item"><i class="fas fa-plus-circle"></i> Post Job</a>
+            <a href="admin-manage-job.html" class="drawer-item"><i class="fas fa-briefcase"></i> Manage Jobs</a>
+            <a href="admin-support.html" class="drawer-item">
+                <i class="fas fa-headset"></i> Support
+                <span class="drawer-badge" id="drawerMsgBadge">0</span>
+            </a>
+            <a href="admin-settings.html" class="drawer-item"><i class="fas fa-cogs"></i> Master Settings</a>
+            <a href="admin-logs.html" class="drawer-item"><i class="fas fa-list-alt"></i> Logs</a>
+            <a href="admin-reports.html" class="drawer-item"><i class="fas fa-chart-line"></i> Analytics</a>
+            <a href="admin-profile.html" class="drawer-item"><i class="fas fa-user-circle"></i> Profile</a>
+        </div>
+
+        <div class="drawer-footer">
+            <button id="logoutBtn" class="drawer-logout">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <div class="container">
+        
+        <a href="admin-users.html" class="nav-back"><i class="fas fa-arrow-left"></i> Back to Users List</a>
+
+        <!-- Main Profile Header -->
+        <div class="profile-header-card">
+            <div class="p-avatar-lg" id="uAvatar">U</div>
+            <div class="p-name" id="uName">Loading...</div>
+            <div class="p-email">
+                <i class="fas fa-envelope"></i> <span id="uEmail">...</span>
+            </div>
+            
+            <div class="p-badges" id="badgeContainer">
+                <span class="role-badge role-user">User</span>
+                <span class="role-badge status-active">Active</span>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-val" id="statJoined">-</div>
+                    <div class="stat-lbl">Joined</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-val" id="statApps">0</div>
+                    <div class="stat-lbl">Applications</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-val" id="statJobs">0</div>
+                    <div class="stat-lbl">Jobs Posted</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="details-grid">
+            <!-- Left Column: Personal Info & Files -->
+            <div style="display:flex; flex-direction:column; gap:30px;">
+                
+                <!-- Personal Info -->
+                <div class="info-card">
+                    <div class="card-head">
+                        <div class="card-title"><i class="fas fa-address-card"></i> Personal Details</div>
+                    </div>
+                    <div class="info-list">
+                        <div class="info-item">
+                            <div class="info-lbl">Phone Number</div>
+                            <div class="info-val" id="uPhone">Not provided</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl">Location</div>
+                            <div class="info-val" id="uLoc">Not provided</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl">Profession/Title</div>
+                            <div class="info-val" id="uTitle">Not provided</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl">Education</div>
+                            <div class="info-val" id="uEdu">Not provided</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl">Experience</div>
+                            <div class="info-val" id="uExp">Not provided</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl">Account Type</div>
+                            <div class="info-val" id="uAccType">Job Seeker</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Documents / Files -->
+                <div class="info-card">
+                    <div class="card-head">
+                        <div class="card-title"><i class="fas fa-folder-open"></i> Documents</div>
+                    </div>
+                    <div class="info-list" id="fileList">
+                        <!-- Dynamic Files Here -->
+                        <div style="padding:25px; text-align:center; color:#94a3b8; font-size:0.9rem;">
+                            No documents uploaded.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Actions & Meta -->
+            <div style="display:flex; flex-direction:column; gap:30px;">
+                
+                <!-- Admin Actions -->
+                <div class="info-card">
+                    <div class="card-head">
+                        <div class="card-title"><i class="fas fa-shield-alt"></i> Admin Actions</div>
+                    </div>
+                    <div class="action-card">
+                        <button class="act-btn btn-msg" onclick="messageUser()">
+                            <i class="fas fa-envelope"></i> Send Message
+                        </button>
+                        
+                        <button class="act-btn btn-reset" onclick="sendPasswordReset()">
+                            <i class="fas fa-key"></i> Send Password Reset
+                        </button>
+
+                        <button class="act-btn btn-ban" id="btnBan" onclick="toggleBan()">
+                            <i class="fas fa-ban"></i> <span id="txtBan">Ban User</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- System Meta -->
+                <div class="info-card">
+                    <div class="card-head">
+                        <div class="card-title"><i class="fas fa-server"></i> System Data</div>
+                    </div>
+                    <div class="info-list">
+                        <div class="info-item">
+                            <div class="info-lbl">User ID</div>
+                            <div class="info-val" id="uUid" style="font-family:monospace; font-size:0.85rem; color:#64748b;">...</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl">Last Login</div>
+                            <div class="info-val" id="uLastLogin">Unknown</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-lbl">Created At</div>
+                            <div class="info-val" id="uCreated">Unknown</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Message Modal (Reused from admin-messages concept) -->
+    <div id="messageModal" style="position:fixed; inset:0; background:rgba(26,26,26,0.7); backdrop-filter:blur(5px); z-index:3000; display:none; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:white; width:100%; max-width:500px; border-radius:24px; overflow:hidden; border-top:6px solid var(--accent-gold);">
+            <div style="padding:20px 25px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="font-family:'Playfair Display', serif; font-size:1.3rem;">Send Message</h3>
+                <button onclick="closeMsgModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;"><i class="fas fa-times"></i></button>
+            </div>
+            <div style="padding:25px;">
+                <textarea id="msgInput" rows="4" style="width:100%; padding:15px; border:1px solid #cbd5e1; border-radius:12px; font-family:inherit; resize:vertical; margin-bottom:20px; outline:none;" placeholder="Type your message..."></textarea>
+                <button onclick="sendMessage()" style="width:100%; background:var(--primary-dark); color:var(--accent-gold); padding:14px; border-radius:50px; font-weight:700; border:none; cursor:pointer;">Send Message</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db } from './config.js'; 
+        import { onAuthStateChanged, signOut, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
+        import { doc, getDoc, updateDoc, collection, query, where, getDocs, addDoc, serverTimestamp, increment } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
+
+        const loader = document.getElementById('page-loader');
+        
+        // Drawer Logic
+        const menuTrigger = document.getElementById('menuTrigger');
+        const sideDrawer = document.getElementById('sideDrawer');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const drawerName = document.getElementById('drawerName');
+        const drawerAvatar = document.getElementById('drawerAvatar');
+        const menuBadge = document.getElementById('menuBadge');
+        const drawerMsgBadge = document.getElementById('drawerMsgBadge');
+
+        // URL Params
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetUserId = urlParams.get('uid');
+
+        let currentUser = null;
+        let targetUser = null;
+
+        // --- AUTH & INIT ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const uDoc = await getDoc(doc(db, "users", user.uid));
+                if (uDoc.exists() && (uDoc.data().role === 'admin' || uDoc.data().isAdmin)) {
+                    currentUser = user;
+                    const adminData = uDoc.data();
+                    drawerName.textContent = adminData.fullName || "Admin";
+                    drawerAvatar.textContent = (adminData.fullName || 'A').charAt(0).toUpperCase();
+                    
+                    checkSupportMessages();
+                    
+                    if(targetUserId) {
+                        loadTargetUser(targetUserId);
+                    } else {
+                        alert("No user specified.");
+                        window.location.href = "admin-users.html";
+                    }
+                } else window.location.href = "signin.html";
+            } else window.location.href = "signin.html";
+        });
+
+        async function loadTargetUser(uid) {
+            try {
+                // 1. Get User Doc
+                const uRef = doc(db, "users", uid);
+                const snap = await getDoc(uRef);
+                
+                if(!snap.exists()) {
+                    alert("User not found.");
+                    window.location.href = "admin-users.html";
+                    return;
+                }
+
+                targetUser = { uid: snap.id, ...snap.data() };
+                renderProfile();
+
+                // 2. Get Stats (Applications count, Jobs posted count)
+                // Applications
+                const qApps = query(collection(db, "applications"), where("userId", "==", uid));
+                const appsSnap = await getDocs(qApps);
+                document.getElementById('statApps').textContent = appsSnap.size;
+
+                // Jobs (if they are employer/admin)
+                const qJobs = query(collection(db, "jobs"), where("employerId", "==", uid));
+                const jobsSnap = await getDocs(qJobs);
+                document.getElementById('statJobs').textContent = jobsSnap.size;
+
+                loader.style.display = 'none';
+
+            } catch(e) {
+                console.error("Error loading profile", e);
+                alert("Error loading user data");
+                window.location.href = "admin-users.html";
+            }
+        }
+
+        function renderProfile() {
+            // Header Info
+            document.getElementById('uAvatar').textContent = (targetUser.fullName || targetUser.email || 'U').charAt(0).toUpperCase();
+            document.getElementById('uName').textContent = targetUser.fullName || "Unnamed User";
+            document.getElementById('uEmail').textContent = targetUser.email;
+
+            // Badges
+            const container = document.getElementById('badgeContainer');
+            container.innerHTML = '';
+            
+            // Role Badge
+            const role = targetUser.role || 'user';
+            const roleSpan = document.createElement('span');
+            roleSpan.className = `role-badge ${role === 'admin' ? 'role-admin' : 'role-user'}`;
+            roleSpan.textContent = role === 'admin' ? 'Administrator' : 'Standard User';
+            container.appendChild(roleSpan);
+
+            // Status Badge
+            const isBanned = targetUser.isBanned || false;
+            const statusSpan = document.createElement('span');
+            statusSpan.className = `role-badge ${isBanned ? 'status-banned' : 'status-active'}`;
+            statusSpan.textContent = isBanned ? 'Banned' : 'Active';
+            container.appendChild(statusSpan);
+
+            // Button Text Update
+            document.getElementById('txtBan').textContent = isBanned ? 'Unban User' : 'Ban User';
+
+            // Dates
+            const joined = targetUser.createdAt ? new Date(targetUser.createdAt.seconds*1000) : null;
+            document.getElementById('statJoined').textContent = joined ? joined.getFullYear() : '-';
+            document.getElementById('uCreated').textContent = joined ? joined.toLocaleDateString() + ' ' + joined.toLocaleTimeString() : 'Unknown';
+            
+            const lastLogin = targetUser.lastLogin ? new Date(targetUser.lastLogin.seconds*1000) : null;
+            document.getElementById('uLastLogin').textContent = lastLogin ? lastLogin.toLocaleDateString() : 'Never';
+
+            // Personal Info
+            document.getElementById('uPhone').textContent = targetUser.phone || 'Not provided';
+            document.getElementById('uLoc').textContent = targetUser.location || 'Not provided';
+            document.getElementById('uTitle').textContent = targetUser.title || 'Not provided';
+            document.getElementById('uEdu').textContent = targetUser.education || 'Not provided';
+            document.getElementById('uExp').textContent = targetUser.experience || 'Not provided';
+            document.getElementById('uAccType').textContent = targetUser.accountType || 'General';
+            document.getElementById('uUid').textContent = targetUser.uid;
+
+            // Render Files (CV/Resume)
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+
+            if (targetUser.resumeUrl) {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-icon"><i class="fas fa-file-pdf"></i></div>
+                        <div>
+                            <div class="file-name">User Resume / CV</div>
+                            <div class="file-meta">PDF Document</div>
+                        </div>
+                    </div>
+                    <a href="${targetUser.resumeUrl}" target="_blank" class="btn-dl" title="Download"><i class="fas fa-download"></i></a>
+                `;
+                fileList.appendChild(item);
+            } else {
+                fileList.innerHTML = `<div style="padding:25px; text-align:center; color:#94a3b8; font-size:0.9rem;">No documents found.</div>`;
+            }
+        }
+
+        // --- ACTIONS ---
+
+        window.toggleBan = async () => {
+            if(!confirm(`Are you sure you want to ${targetUser.isBanned ? 'UNBAN' : 'BAN'} this user?`)) return;
+            
+            const newVal = !targetUser.isBanned;
+            try {
+                await updateDoc(doc(db, "users", targetUser.uid), {
+                    isBanned: newVal
+                });
+                
+                // Reload data
+                targetUser.isBanned = newVal;
+                renderProfile();
+                alert(`User has been ${newVal ? 'Banned' : 'Unbanned'}.`);
+            } catch(e) {
+                console.error(e);
+                alert("Action failed.");
+            }
+        };
+
+        window.sendPasswordReset = async () => {
+            if(!confirm(`Send password reset email to ${targetUser.email}?`)) return;
+            try {
+                await sendPasswordResetEmail(auth, targetUser.email);
+                alert("Password reset email sent.");
+            } catch(e) {
+                console.error(e);
+                alert("Failed to send email. " + e.message);
+            }
+        };
+
+        // --- MESSAGING ---
+        window.messageUser = () => {
+            document.getElementById('messageModal').style.display = 'flex';
+        };
+        window.closeMsgModal = () => {
+            document.getElementById('messageModal').style.display = 'none';
+        };
+
+        window.sendMessage = async () => {
+            const text = document.getElementById('msgInput').value.trim();
+            if(!text) return alert("Please type a message.");
+
+            try {
+                // 1. Check/Create Chat logic (Simplified for brevity)
+                const chatsRef = collection(db, "chats");
+                // In real app, you'd query for existing chat. Here we'll just create a message entry
+                // that redirects to admin-messages logic.
+                
+                // Find existing chat
+                const q = query(chatsRef, where("participants", "array-contains", targetUser.uid));
+                const snap = await getDocs(q);
+                let chatId = null;
+
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    if(d.participants.includes(currentUser.uid)) chatId = doc.id;
+                });
+
+                if(!chatId) {
+                    const newChat = await addDoc(chatsRef, {
+                        participants: [currentUser.uid, targetUser.uid],
+                        lastMessage: text,
+                        lastSenderId: currentUser.uid,
+                        lastTimestamp: serverTimestamp(),
+                        isRead: false,
+                        unreadCount: 1
+                    });
+                    chatId = newChat.id;
+                } else {
+                     await updateDoc(doc(db, "chats", chatId), {
+                        lastMessage: text,
+                        lastSenderId: currentUser.uid,
+                        lastTimestamp: serverTimestamp(),
+                        isRead: false,
+                        unreadCount: increment(1)
+                    });
+                }
+
+                await addDoc(collection(db, "messages"), {
+                    chatId: chatId,
+                    senderId: currentUser.uid,
+                    receiverId: targetUser.uid,
+                    text: text,
+                    timestamp: serverTimestamp(),
+                    read: false
+                });
+
+                alert("Message sent!");
+                closeMsgModal();
+                // Optionally redirect
+                // window.location.href = "admin-messages.html";
+
+            } catch(e) {
+                console.error(e);
+                alert("Failed to send message.");
+            }
+        };
+
+        // --- DRAWER & NOTIFICATIONS ---
+        function checkSupportMessages() {
+            const q = query(collection(db, "support_tickets"), where("hasUnreadAdmin", "==", true));
+            // simplified listener
+        }
+
+        function toggleDrawer() {
+            sideDrawer.classList.toggle('active');
+            menuOverlay.classList.toggle('active');
+        }
+        menuTrigger.addEventListener('click', toggleDrawer);
+        menuOverlay.addEventListener('click', toggleDrawer);
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await signOut(auth);
+            window.location.href = "signin.html";
+        });
+
+    </script>
+</body>
+</html>

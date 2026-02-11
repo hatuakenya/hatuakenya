@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Job Details | Hatua Recruitment</title>
+    <meta name="theme-color" content="#1A1A1A">
+
+    <!-- PWA Manifest & Meta -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/images/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/images/icon-192.png">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* HATUA BRANDING */
+            --primary-dark: #1A1A1A;    /* Charcoal */
+            --primary-light: #F8FAFC;   /* Off-white background */
+            --accent-gold: #D4AF37;     /* Gold */
+            --accent-gold-dim: #F9F1D8; /* Light Gold BG */
+            
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #F8FAFC;
+            --surface-white: #ffffff;
+            
+            --shadow-subtle: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --radius-lg: 24px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * {margin:0;padding:0;box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-main);
+            background: var(--bg-body);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 100px; 
+        }
+
+        /* ---- HEADER ---- */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px);
+            padding: 15px 5%; position: fixed; top: 0; left: 0; right: 0;
+            z-index: 1000; box-shadow: var(--shadow-subtle);
+            height: 70px;
+        }
+        
+        .back-btn { 
+            color: var(--text-main); font-size: 1.2rem; text-decoration: none; 
+            width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; background: #f1f5f9; transition: var(--transition);
+        }
+        .back-btn:hover { background: var(--accent-gold); color: var(--primary-dark); }
+        
+        .header-title { font-weight: 700; font-size: 1.1rem; color: var(--primary-dark); font-family: 'Playfair Display', serif; }
+        
+        .share-btn { 
+            color: var(--primary-dark); font-size: 1.2rem; background: none; border: none; cursor: pointer;
+            width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;
+        }
+        .share-btn:hover { background: #f1f5f9; color: var(--accent-gold); }
+
+        /* ---- MAIN CONTENT ---- */
+        .container {
+            margin-top: 90px; padding: 20px 5%; max-width: 800px; margin-left: auto; margin-right: auto; width: 100%;
+        }
+
+        /* Hero Section (Advanced 3D) */
+        .hero-card {
+            background: var(--surface-white); border-radius: var(--radius-lg); padding: 35px 25px;
+            text-align: center; margin-bottom: 25px; position: relative; overflow: hidden;
+            box-shadow: 0 15px 30px -5px rgba(0,0,0,0.1);
+            border-bottom: 6px solid var(--accent-gold); /* 3D Depth */
+            border-left: 1px solid rgba(0,0,0,0.03); border-right: 1px solid rgba(0,0,0,0.03); border-top: 1px solid rgba(0,0,0,0.03);
+            transition: var(--transition);
+        }
+        
+        /* Company Logo floating effect */
+        .logo-wrapper { position: relative; display: inline-block; margin-bottom: 20px; }
+        .company-logo-lg {
+            width: 80px; height: 80px; background: var(--primary-dark); border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.2rem; color: var(--accent-gold); font-weight: 800; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08); border: 2px solid var(--accent-gold);
+        }
+
+        /* Bookmark Floating Button */
+        .bookmark-float {
+            position: absolute; top: 20px; right: 20px;
+            width: 45px; height: 45px; border-radius: 50%;
+            background: #fff; border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; color: #cbd5e1; cursor: pointer; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .bookmark-float:hover { transform: scale(1.1); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        .bookmark-float.saved { color: var(--primary-dark); background: var(--accent-gold); border-color: var(--accent-gold); }
+        .bookmark-float.saved i { font-weight: 900; transform: scale(1.1); }
+
+        .job-title-lg { font-size: 1.8rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 8px; font-family: 'Playfair Display', serif; line-height: 1.2; }
+        .company-name-lg { font-size: 1rem; color: var(--text-muted); font-weight: 600; margin-bottom: 25px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        
+        .tags-container { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .tag-pill { 
+            background: #f8fafc; color: var(--text-muted); padding: 8px 16px; 
+            border-radius: 12px; font-size: 0.85rem; font-weight: 700; border: 1px solid #e2e8f0;
+        }
+        .tag-pill.salary { background: var(--accent-gold-dim); color: var(--primary-dark); border-color: var(--accent-gold); }
+
+        /* Detail Cards */
+        .detail-section {
+            background: var(--surface-white); border-radius: var(--radius-lg); padding: 25px;
+            box-shadow: var(--shadow-subtle); margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.03);
+        }
+        .section-title { font-size: 1.1rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; font-family: 'Playfair Display', serif; }
+        .section-icon { color: var(--accent-gold); font-size: 1.1rem; }
+        
+        .content-text { color: #475569; line-height: 1.8; font-size: 0.95rem; white-space: pre-wrap; }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .info-item h4 { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px; font-weight: 700; letter-spacing: 0.5px; }
+        .info-item p { font-size: 1rem; font-weight: 700; color: var(--primary-dark); }
+
+        /* Bottom Action Bar */
+        .action-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
+            padding: 20px 5%; border-top: 1px solid #e2e8f0;
+            display: flex; justify-content: center;
+            z-index: 999;
+            animation: slideUp 0.5s ease-out;
+        }
+        .apply-btn-lg {
+            background: var(--primary-dark); color: var(--accent-gold); text-decoration: none;
+            padding: 16px 40px; border-radius: 16px; font-weight: 700; font-size: 1rem;
+            width: 100%; max-width: 500px; text-align: center;
+            box-shadow: 0 10px 25px -5px rgba(26, 26, 26, 0.4);
+            transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: 10px;
+            border: 2px solid var(--primary-dark);
+        }
+        .apply-btn-lg:hover { transform: translateY(-3px); background: #000; color: #fff; box-shadow: 0 15px 30px -5px rgba(0,0,0,0.5); border-color: var(--accent-gold); }
+
+        /* Toast */
+        #toast {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: var(--primary-dark); color: var(--accent-gold); padding: 12px 24px; border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); font-size: 0.9rem; font-weight: 600;
+            opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2000;
+            display: flex; align-items: center; gap: 10px;
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* Skeleton Loader */
+        .skeleton { background: #e2e8f0; border-radius: 8px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        #loadingState { display: block; }
+        #contentState { display: none; animation: fadeUp 0.5s ease; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .sk-box { height: 200px; margin-bottom: 20px; width: 100%; }
+        .sk-line { height: 20px; margin-bottom: 10px; width: 100%; }
+        .sk-short { width: 60%; }
+
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <a href="javascript:history.back()" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+        <div class="header-title">Job Details</div>
+        <button class="share-btn" onclick="shareJob()"><i class="fas fa-share-alt"></i></button>
+    </header>
+
+    <div class="container">
+        
+        <!-- LOADING SKELETON -->
+        <div id="loadingState">
+            <div class="skeleton sk-box" style="height: 280px; border-radius: 24px;"></div>
+            <div class="skeleton sk-line sk-short"></div>
+            <div class="skeleton sk-line"></div>
+            <div class="skeleton sk-line"></div>
+            <div class="skeleton sk-box" style="height: 150px; border-radius: 24px;"></div>
+        </div>
+
+        <!-- CONTENT -->
+        <div id="contentState">
+            
+            <!-- Hero Card -->
+            <div class="hero-card">
+                <!-- Bookmark Button -->
+                <button class="bookmark-float" id="bookmarkBtn" onclick="toggleBookmark()">
+                    <i class="far fa-bookmark"></i>
+                </button>
+
+                <div class="logo-wrapper">
+                    <div class="company-logo-lg" id="companyInitial">C</div>
+                </div>
+                
+                <h1 class="job-title-lg" id="jobTitle">...</h1>
+                <div class="company-name-lg">
+                    <span id="companyName">...</span> 
+                    <i class="fas fa-check-circle" style="color:var(--accent-gold); font-size:0.9rem;"></i>
+                </div>
+                
+                <div class="tags-container">
+                    <span class="tag-pill" id="jobType">Full Time</span>
+                    <span class="tag-pill" id="jobLocation">Remote</span>
+                    <span class="tag-pill salary" id="jobSalary">$$$</span>
+                </div>
+            </div>
+
+            <!-- Overview -->
+            <div class="detail-section">
+                <div class="section-title"><i class="fas fa-info-circle section-icon"></i> Job Overview</div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <h4>Posted Date</h4>
+                        <p id="postedDate">...</p>
+                    </div>
+                    <div class="info-item">
+                        <h4>Deadline</h4>
+                        <p id="deadlineDate" style="color:#ef4444;">...</p>
+                    </div>
+                    <div class="info-item">
+                        <h4>Category</h4>
+                        <p id="jobCategory">...</p>
+                    </div>
+                    <div class="info-item">
+                        <h4>Experience</h4>
+                        <p>Mid-Level</p> 
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="detail-section">
+                <div class="section-title"><i class="fas fa-file-alt section-icon"></i> Requirements & Description</div>
+                <div class="content-text" id="jobRequirements">
+                    Loading description...
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ACTION BAR -->
+        <div class="action-bar" id="actionBar" style="display:none;">
+            <a href="#" id="applyBtn" class="apply-btn-lg">
+                Apply Now <i class="fas fa-paper-plane"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast"><i class="fas fa-check-circle"></i> <span>Saved successfully</span></div>
+
+    <!-- FIREBASE & LOGIC -->
+    <script type="module">
+        import { auth, db } from './config.js'; 
+        import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
+        import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
+
+        // URL Params
+        const urlParams = new URLSearchParams(window.location.search);
+        const jobId = urlParams.get('id');
+
+        // Elements
+        const loadingState = document.getElementById('loadingState');
+        const contentState = document.getElementById('contentState');
+        const actionBar = document.getElementById('actionBar');
+        const bookmarkBtn = document.getElementById('bookmarkBtn');
+        const toast = document.getElementById('toast');
+
+        let currentUser = null;
+        let isJobSaved = false;
+
+        // 1. CONFIG LOADER
+        async function loadAppConfig() {
+            try {
+                const brandSnap = await getDoc(doc(db, "settings", "branding"));
+                if (brandSnap.exists()) {
+                    const data = brandSnap.data();
+                    const appName = data.appName || 'Hatua';
+                    document.title = `Job Details | ${appName}`;
+                }
+            } catch (e) { console.error("Config Error", e); }
+        }
+
+        // Init Config
+        document.addEventListener('DOMContentLoaded', loadAppConfig);
+
+        // 2. Auth Check
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                if (!jobId) {
+                    alert("No job selected.");
+                    window.location.href = "jobs.html";
+                    return;
+                }
+                
+                // Parallel fetching: Job details AND User's Saved status
+                await Promise.all([
+                    loadJobDetails(jobId),
+                    checkIfSaved(user.uid, jobId)
+                ]);
+
+            } else {
+                window.location.href = "signin.html";
+            }
+        });
+
+        // 3. Fetch Data
+        async function loadJobDetails(id) {
+            try {
+                const docRef = doc(db, "jobs", id);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    renderJob(data, id);
+                } else {
+                    document.querySelector('.container').innerHTML = `
+                        <div style="text-align:center; padding:50px;">
+                            <h2>Job Not Found</h2>
+                            <p>This job may have been removed.</p>
+                            <a href="jobs.html" class="apply-btn-lg" style="margin-top:20px;">Browse Jobs</a>
+                        </div>
+                    `;
+                    loadingState.style.display = 'none';
+                }
+            } catch (error) {
+                console.error("Error loading job:", error);
+            }
+        }
+
+        // 4. Check Saved Status
+        async function checkIfSaved(uid, jId) {
+            try {
+                const userDoc = await getDoc(doc(db, "users", uid));
+                if (userDoc.exists()) {
+                    const savedJobs = userDoc.data().savedJobs || [];
+                    isJobSaved = savedJobs.includes(jId);
+                    updateBookmarkUI();
+                }
+            } catch (e) {
+                console.error("Error checking saved status", e);
+            }
+        }
+
+        function updateBookmarkUI() {
+            if (isJobSaved) {
+                bookmarkBtn.classList.add('saved');
+                bookmarkBtn.innerHTML = '<i class="fas fa-bookmark"></i>';
+            } else {
+                bookmarkBtn.classList.remove('saved');
+                bookmarkBtn.innerHTML = '<i class="far fa-bookmark"></i>';
+            }
+        }
+
+        // 5. Render Data
+        function renderJob(job, id) {
+            // Text Content
+            document.getElementById('jobTitle').textContent = job.title;
+            document.getElementById('companyName').textContent = job.company;
+            document.getElementById('companyInitial').textContent = job.company.charAt(0).toUpperCase();
+            
+            // Pills
+            document.getElementById('jobType').textContent = job.type || 'Full Time';
+            document.getElementById('jobLocation').textContent = job.city || job.location || 'Remote';
+            document.getElementById('jobSalary').textContent = job.salary || 'Negotiable';
+            
+            // Dates
+            const created = job.createdAt ? new Date(job.createdAt.seconds * 1000).toLocaleDateString() : 'Recently';
+            document.getElementById('postedDate').textContent = created;
+            document.getElementById('deadlineDate').textContent = job.deadline || 'Open';
+            document.getElementById('jobCategory').textContent = job.category || 'General';
+
+            // Description
+            document.getElementById('jobRequirements').textContent = job.requirements || 'No description provided.';
+
+            // Link Apply Button
+            const applyBtn = document.getElementById('applyBtn');
+            applyBtn.href = `apply.html?id=${id}`;
+
+            // Switch Views
+            loadingState.style.display = 'none';
+            contentState.style.display = 'block';
+            actionBar.style.display = 'flex';
+        }
+
+        // 6. Bookmark Logic
+        window.toggleBookmark = async () => {
+            if (!currentUser) return;
+
+            // Optimistic UI
+            isJobSaved = !isJobSaved;
+            updateBookmarkUI();
+            
+            const msg = isJobSaved ? "Job saved successfully" : "Job removed from saved";
+            showToast(msg);
+
+            try {
+                const userRef = doc(db, "users", currentUser.uid);
+                if (isJobSaved) {
+                    await updateDoc(userRef, { savedJobs: arrayUnion(jobId) });
+                } else {
+                    await updateDoc(userRef, { savedJobs: arrayRemove(jobId) });
+                }
+            } catch (e) {
+                console.error("Error toggling bookmark", e);
+                // Revert if error
+                isJobSaved = !isJobSaved;
+                updateBookmarkUI();
+                showToast("Error updating bookmark");
+            }
+        };
+
+        function showToast(msg) {
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> <span>${msg}</span>`;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // 7. Share Functionality
+        window.shareJob = () => {
+            if (navigator.share) {
+                navigator.share({
+                    title: document.getElementById('jobTitle').textContent,
+                    text: `Check out this job at ${document.getElementById('companyName').textContent}`,
+                    url: window.location.href
+                }).catch(console.error);
+            } else {
+                alert("Link copied to clipboard!");
+                navigator.clipboard.writeText(window.location.href);
+            }
+        };
+
+    </script>
+</body>
+</html>

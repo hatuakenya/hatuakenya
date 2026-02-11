@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Secure Application | Hatua Recruitment</title>
+    <meta name="theme-color" content="#1A1A1A">
+
+    <!-- PWA Manifest & Meta -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/images/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/images/icon-192.png">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* HATUA BRANDING */
+            --primary-dark: #1A1A1A;    /* Charcoal */
+            --primary-light: #2C2C2C;
+            --accent-main: #D4AF37;     /* Gold */
+            --accent-light: #FFFBEB;    /* Light Gold BG */
+            
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #F8FAFC;
+            --surface-white: #ffffff;
+            
+            --shadow-subtle: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-elevated: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * {margin:0;padding:0;box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-main);
+            background: url('assets/images/background.png') repeat, var(--bg-body);
+            background-size: 300px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            padding-bottom: 40px; 
+        }
+
+        /* ---- HEADER ---- */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 10px 5%; height: 70px;
+            position: fixed; top: 0; left: 0; right: 0;
+            z-index: 1000; box-shadow: var(--shadow-subtle); border-bottom: 1px solid rgba(0,0,0,0.03);
+        }
+        
+        .logo-con { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-con img { height: 35px; width: auto; }
+        .logo-text { font-size: 1.2rem; font-weight: 700; color: var(--primary-dark); font-family: 'Playfair Display', serif; }
+
+        .header-actions { display: flex; align-items: center; gap: 15px; }
+
+        .btn-close {
+            background: #f1f5f9; border: none; color: #64748b; width: 36px; height: 36px; 
+            border-radius: 50%; display: grid; place-items: center; font-size: 1rem; 
+            cursor: pointer; transition: 0.2s; text-decoration: none;
+        }
+        .btn-close:hover { background: #e2e8f0; color: var(--primary-dark); transform: rotate(90deg); }
+
+        /* ---- HAMBURGER MENU ---- */
+        .hamburger-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(26, 26, 26, 0.05); color: var(--primary-dark);
+            border: none; cursor: pointer; display: grid; place-items: center;
+            font-size: 1.2rem; transition: var(--transition);
+        }
+        .hamburger-btn:hover { background: rgba(212, 175, 55, 0.1); color: var(--accent-main); transform: rotate(90deg); }
+
+        /* ---- DRAWER ---- */
+        .menu-overlay {
+            position: fixed; inset: 0; background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(4px); z-index: 2000; opacity: 0; pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .menu-overlay.active { opacity: 1; pointer-events: all; }
+
+        .side-drawer {
+            position: fixed; top: 0; right: 0; bottom: 0;
+            width: 80%; max-width: 320px;
+            background: #fff; z-index: 2001;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column; padding: 30px 0;
+            border-left: 4px solid var(--accent-main);
+        }
+        .side-drawer.active { transform: translateX(0); }
+
+        .drawer-header { padding: 0 25px 25px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 15px; }
+        .drawer-avatar { width: 50px; height: 50px; background: var(--primary-dark); color: var(--accent-main); border-radius: 50%; display: grid; place-items: center; font-size: 1.2rem; font-weight: 700; border: 2px solid var(--accent-main); }
+        .drawer-user h4 { font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 2px; }
+        .drawer-user p { font-size: 0.85rem; color: var(--accent-main); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .drawer-links { padding: 20px 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+        .drawer-item { padding: 12px 20px; border-radius: 12px; text-decoration: none; color: #1e293b; font-weight: 600; display: flex; align-items: center; gap: 15px; transition: 0.2s; }
+        .drawer-item i { width: 24px; text-align: center; color: #64748b; transition: 0.2s; }
+        .drawer-item:hover, .drawer-item.active { background: var(--accent-light); color: var(--primary-dark); }
+        .drawer-item:hover i, .drawer-item.active i { color: var(--accent-main); }
+        
+        .drawer-footer { padding: 20px 25px 0; border-top: 1px solid #f1f5f9; }
+        .drawer-logout { width: 100%; padding: 12px; background: #fef2f2; color: #ef4444; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; font-family: var(--font-main); }
+        .drawer-logout:hover { background: #fee2e2; }
+
+        /* ---- MAIN CONTAINER ---- */
+        .app-container {
+            margin-top: 100px; padding: 0 5%;
+            max-width: 750px; margin-left: auto; margin-right: auto; width: 100%;
+        }
+
+        /* Stepper */
+        .stepper { display: flex; justify-content: space-between; margin-bottom: 35px; position: relative; padding: 0 10px; }
+        .stepper::before {
+            content: ''; position: absolute; top: 18px; left: 20px; right: 20px; height: 2px;
+            background: #e2e8f0; z-index: -1;
+        }
+        .step-item {
+            display: flex; flex-direction: column; align-items: center; gap: 8px; 
+            background: var(--bg-body); padding: 0 10px; z-index: 1;
+        }
+        .step-circle {
+            width: 36px; height: 36px; border-radius: 50%; background: #fff; border: 2px solid #cbd5e1;
+            display: flex; align-items: center; justify-content: center; font-weight: 700; color: #64748b;
+            transition: var(--transition);
+        }
+        .step-label { font-size: 0.75rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .step-item.active .step-circle { border-color: var(--accent-main); color: var(--accent-main); background: var(--primary-dark); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); }
+        .step-item.active .step-label { color: var(--primary-dark); }
+        
+        .step-item.completed .step-circle { border-color: var(--accent-main); background: var(--accent-main); color: white; border: none; }
+        .step-item.completed .step-label { color: var(--accent-main); }
+
+        /* Form Card */
+        .form-card {
+            background: var(--surface-white); border-radius: var(--radius-lg);
+            padding: 35px; box-shadow: var(--shadow-elevated); border: 1px solid rgba(0,0,0,0.04);
+            position: relative; overflow: hidden; animation: slideUp 0.5s ease-out;
+            border-top: 4px solid var(--accent-main);
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Job Summary Header */
+        .job-summary {
+            background: #f8fafc; padding: 20px; border-radius: var(--radius-md); margin-bottom: 30px;
+            border-left: 4px solid var(--primary-dark); display: flex; justify-content: space-between; align-items: center;
+        }
+        .job-info h2 { font-size: 1.1rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px; }
+        .job-info p { font-size: 0.9rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+        .job-icon { width: 40px; height: 40px; background: var(--primary-dark); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--accent-main); box-shadow: var(--shadow-subtle); }
+
+        /* Form Inputs */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .full-width { grid-column: 1 / -1; }
+
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-input, .form-select, .form-textarea {
+            width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 12px;
+            font-size: 1rem; background: #fff; transition: var(--transition);
+            font-family: inherit; color: var(--primary-dark);
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--accent-main); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); }
+        
+        /* Auto-filled styling (subtle lock) */
+        .form-input[readonly] { 
+            background: #f8fafc; border-color: #f1f5f9; color: #475569; 
+            cursor: default; padding-right: 40px;
+        }
+        .input-wrapper { position: relative; }
+        .input-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
+
+        /* Payment Section */
+        .payment-box {
+            text-align: center; background: #f0fdf4; border: 1px solid #dcfce7;
+            padding: 30px; border-radius: 20px; margin-bottom: 30px;
+        }
+        .mpesa-logo { height: 45px; margin-bottom: 15px; }
+        .pay-amount { font-size: 2rem; font-weight: 800; color: #15803d; letter-spacing: -1px; margin: 10px 0; font-family: 'Playfair Display', serif; }
+        .pay-detail { 
+            background: #fff; padding: 12px 25px; border-radius: 50px; 
+            display: inline-block; font-weight: 600; color: #166534; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-top: 10px;
+        }
+        .payment-mode-badge {
+            background: #16a34a; color: white; padding: 4px 12px; 
+            border-radius: 20px; font-size: 0.75rem; text-transform: uppercase; 
+            font-weight: 700; margin-bottom: 10px; display: inline-block;
+        }
+        
+        .code-input { 
+            text-align: center; font-size: 1.2rem; letter-spacing: 4px; font-weight: 700; text-transform: uppercase; 
+            border-color: #cbd5e1; padding: 18px;
+        }
+        .code-input:placeholder-shown { letter-spacing: 1px; }
+
+        /* Actions */
+        .action-bar { margin-top: 35px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 25px; }
+        
+        .btn {
+            padding: 14px 28px; border-radius: 12px; font-weight: 600; cursor: pointer;
+            transition: var(--transition); border: none; font-size: 0.95rem; display: flex; align-items: center; gap: 10px;
+        }
+        .btn-primary { background: var(--primary-dark); color: white; box-shadow: 0 4px 12px rgba(26, 26, 26, 0.2); }
+        .btn-primary:hover { background: var(--accent-main); color: #fff; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+        
+        .btn-text { background: transparent; color: #64748b; padding: 10px 0; }
+        .btn-text:hover { color: var(--primary-dark); }
+
+        /* Loading Overlay */
+        .page-loader {
+            position: fixed; inset: 0; background: #fff; z-index: 2000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid #e2e8f0;
+            border-top: 4px solid var(--accent-main); border-radius: 50%;
+            animation: spin 0.8s linear infinite; margin-bottom: 15px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Hidden Utility */
+        .hidden { display: none; }
+
+        @media (max-width: 650px) {
+            .form-grid { grid-template-columns: 1fr; gap: 18px; }
+            .form-card { padding: 25px; }
+            .job-summary { flex-direction: column; text-align: center; gap: 15px; }
+            .action-bar { flex-direction: column-reverse; gap: 15px; }
+            .btn { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PAGE LOADER -->
+    <div class="page-loader" id="pageLoader">
+        <div class="spinner"></div>
+        <p style="color: #64748b; font-size: 0.9rem; font-weight: 500;">Securing Application...</p>
+    </div>
+
+    <!-- HEADER -->
+    <header>
+        <a href="dashboard.html" class="logo-con">
+            <img src="assets/images/logo.png" alt="Logo" id="headerLogo">
+            <span class="logo-text" id="headerAppName">Hatua Recruitment</span>
+        </a>
+        
+        <div class="header-actions">
+            <button class="hamburger-btn" id="menuTrigger">
+                <i class="fas fa-bars"></i>
+            </button>
+            <a href="jobs.html" class="btn-close" aria-label="Close"><i class="fas fa-times"></i></a>
+        </div>
+    </header>
+
+    <!-- DRAWER -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+    <aside class="side-drawer" id="sideDrawer">
+        <div class="drawer-header">
+            <div class="drawer-avatar" id="drawerAvatar">M</div>
+            <div class="drawer-user">
+                <h4 id="drawerName">Member</h4>
+                <p>Applicant</p>
+            </div>
+        </div>
+        
+        <div class="drawer-links">
+            <a href="dashboard.html" class="drawer-item"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="jobs.html" class="drawer-item active"><i class="fas fa-briefcase"></i> Browse Jobs</a>
+            <a href="notifications.html" class="drawer-item"><i class="fas fa-bell"></i> Notifications</a>
+            <a href="saved-jobs.html" class="drawer-item"><i class="fas fa-bookmark"></i> Saved Jobs</a>
+            <a href="applications.html" class="drawer-item"><i class="fas fa-paper-plane"></i> My Applications</a>
+            <a href="messages.html" class="drawer-item"><i class="fas fa-comment-dots"></i> Messages</a>
+            <a href="settings.html" class="drawer-item"><i class="fas fa-cog"></i> Settings</a>
+            <a href="profile.html" class="drawer-item"><i class="fas fa-user"></i> My Profile</a>
+        </div>
+
+        <div class="drawer-footer">
+            <button id="logoutBtn" class="drawer-logout">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="app-container">
+        
+        <!-- STEPPER -->
+        <div class="stepper">
+            <div class="step-item active" id="step1-ind">
+                <div class="step-circle">1</div>
+                <div class="step-label">Details</div>
+            </div>
+            <div class="step-item" id="step2-ind">
+                <div class="step-circle">2</div>
+                <div class="step-label">Verify</div>
+            </div>
+            <div class="step-item" id="step3-ind">
+                <div class="step-circle"><i class="fas fa-check"></i></div>
+                <div class="step-label">Done</div>
+            </div>
+        </div>
+
+        <div class="form-card">
+            
+            <!-- JOB SUMMARY -->
+            <div class="job-summary">
+                <div class="job-info">
+                    <h2 id="displayJobTitle">Loading Position...</h2>
+                    <p><i class="fas fa-building" style="color:#94a3b8; font-size:0.8rem;"></i> <span id="displayCompany">...</span> &bull; <span id="displaySalary">...</span></p>
+                </div>
+                <div class="job-icon"><i class="fas fa-briefcase"></i></div>
+            </div>
+
+            <!-- STEP 1: APPLICATION DETAILS -->
+            <form id="applicationForm">
+                <div class="form-grid">
+                    <!-- Auto-Filled Fields (Read Only) -->
+                    <div class="form-group full-width">
+                        <label>Full Name</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="fullName" class="form-input" readonly placeholder="Loading...">
+                            <i class="fas fa-lock input-icon"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <div class="input-wrapper">
+                            <input type="tel" id="phone" class="form-input" readonly placeholder="Loading...">
+                            <i class="fas fa-lock input-icon"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <div class="input-wrapper">
+                            <input type="email" id="email" class="form-input" readonly placeholder="Loading...">
+                            <i class="fas fa-lock input-icon"></i>
+                        </div>
+                    </div>
+
+                    <!-- Editable Fields -->
+                    <div class="form-group">
+                        <label>Current Location</label>
+                        <input type="text" id="location" class="form-input" placeholder="e.g. Nairobi, Westlands" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Age</label>
+                        <input type="number" id="age" class="form-input" placeholder="e.g. 24" required min="18">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Education Level</label>
+                        <select id="education" class="form-select" required>
+                            <option value="">Select Qualification</option>
+                            <option value="High School">High School</option>
+                            <option value="Certificate">Certificate</option>
+                            <option value="Diploma">Diploma</option>
+                            <option value="Degree">Bachelor's Degree</option>
+                            <option value="Masters">Master's Degree</option>
+                            <option value="PhD">PhD</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Relevant Experience (Years)</label>
+                        <input type="text" id="experience" class="form-input" placeholder="e.g. 3 years in Digital Marketing">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Cover Note / Why Hire You?</label>
+                        <textarea id="coverLetter" class="form-textarea" rows="3" placeholder="Briefly highlight your key strengths for this role..."></textarea>
+                    </div>
+                </div>
+
+                <div class="action-bar">
+                    <button type="button" class="btn-text" onclick="history.back()">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="goToPaymentBtn">
+                        Proceed to Verify <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </form>
+
+            <!-- STEP 2: PAYMENT VERIFICATION (Hidden) -->
+            <div id="paymentSection" class="hidden">
+                <div class="payment-box">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/M-PESA_LOGO-01.svg/1200px-M-PESA_LOGO-01.svg.png" alt="M-Pesa" class="mpesa-logo">
+                    
+                    <div>
+                        <span class="payment-mode-badge" id="paymentModeBadge">BUY GOODS</span>
+                    </div>
+                    
+                    <p style="color:#64748b; font-size:0.9rem;">To ensure genuine applicants, a small processing fee is required.</p>
+                    
+                    <div class="pay-amount" id="feeAmount">KES ...</div>
+                    
+                    <!-- Dynamic Payment Instruction -->
+                    <div id="paymentInstructionsBox">
+                        <div class="pay-detail">
+                            <span id="paymentLabel">Till Number:</span> 
+                            <span id="paymentDestination" style="color:var(--primary-dark); font-weight:800; font-size:1.1rem; margin-left:5px;">...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label style="text-align:center;">Enter M-Pesa Transaction Code</label>
+                    <input type="text" id="mpesaCode" class="form-input code-input" placeholder="QKH1234567" maxlength="10">
+                    <p style="text-align:center; color:#94a3b8; font-size:0.85rem; margin-top:8px;">
+                        <i class="fas fa-shield-alt"></i> Secure Verification
+                    </p>
+                </div>
+
+                <div class="action-bar">
+                    <button type="button" class="btn-text" id="backToDetailsBtn">Edit Details</button>
+                    <button type="button" class="btn btn-primary" id="submitApplicationBtn">
+                        <div class="spinner" id="btnSpinner" style="width:20px; height:20px; border-width:2px; margin:0; display:none;"></div>
+                        <span id="btnText">Submit Application</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 3: SUCCESS (Hidden) -->
+            <div id="successSection" class="hidden" style="text-align: center; padding: 40px 10px;">
+                <div style="width:80px; height:80px; background:#ecfdf5; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; margin-bottom:20px;">
+                    <i class="fas fa-check" style="font-size: 2.5rem; color: #10b981;"></i>
+                </div>
+                <h2 style="color: var(--primary-dark); margin-bottom: 10px; font-size:1.8rem; font-family: 'Playfair Display', serif;">Application Sent!</h2>
+                <p style="color: var(--text-muted); margin-bottom: 30px; max-width:400px; margin-left:auto; margin-right:auto; line-height:1.6;">
+                    Your application for <strong><span id="successJobTitle"></span></strong> has been received. You will be notified once the review process begins.
+                </p>
+                <a href="dashboard.html" class="btn btn-primary" style="display: inline-flex; text-decoration: none;">
+                    Go to Dashboard
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- FIREBASE & LOGIC -->
+    <script type="module">
+        import { auth, db } from './config.js'; 
+        import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
+        import { doc, getDoc, addDoc, collection, serverTimestamp, writeBatch } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
+
+        // UI Elements
+        const step1Ind = document.getElementById('step1-ind');
+        const step2Ind = document.getElementById('step2-ind');
+        const step3Ind = document.getElementById('step3-ind');
+        const pageLoader = document.getElementById('pageLoader');
+        const headerAppName = document.getElementById('headerAppName');
+        
+        const applicationForm = document.getElementById('applicationForm');
+        const paymentSection = document.getElementById('paymentSection');
+        const successSection = document.getElementById('successSection');
+        
+        const goToPaymentBtn = document.getElementById('goToPaymentBtn');
+        const backToDetailsBtn = document.getElementById('backToDetailsBtn');
+        const submitApplicationBtn = document.getElementById('submitApplicationBtn');
+        const btnSpinner = document.getElementById('btnSpinner');
+        const btnText = document.getElementById('btnText');
+
+        // Drawer
+        const menuTrigger = document.getElementById('menuTrigger');
+        const sideDrawer = document.getElementById('sideDrawer');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const drawerName = document.getElementById('drawerName');
+        const drawerAvatar = document.getElementById('drawerAvatar');
+
+        // URL Params
+        const urlParams = new URLSearchParams(window.location.search);
+        const jobId = urlParams.get('id');
+
+        let currentUser = null;
+        let jobData = null;
+        let applicationFee = "150"; 
+
+        // 1. DRAWER TOGGLE
+        function toggleDrawer() {
+            sideDrawer.classList.toggle('active');
+            menuOverlay.classList.toggle('active');
+        }
+        function closeDrawer() {
+            sideDrawer.classList.remove('active');
+            menuOverlay.classList.remove('active');
+        }
+        menuTrigger.addEventListener('click', toggleDrawer);
+        menuOverlay.addEventListener('click', closeDrawer);
+        // Auto close when clicking links
+        document.querySelectorAll('.drawer-item').forEach(l => l.addEventListener('click', closeDrawer));
+
+        logoutBtn.addEventListener('click', async () => {
+            await signOut(auth);
+            window.location.href = "signin.html";
+        });
+
+        // 2. CONFIG LOADER
+        async function loadAppConfig() {
+            try {
+                // Branding
+                const brandSnap = await getDoc(doc(db, "settings", "branding"));
+                if (brandSnap.exists()) {
+                    const data = brandSnap.data();
+                    const appName = data.appName || 'Hatua Recruitment';
+                    
+                    document.title = `Secure Application | ${appName}`;
+                    headerAppName.textContent = appName;
+                    
+                    if(data.primaryColor) document.documentElement.style.setProperty('--primary-dark', data.primaryColor);
+                }
+
+                // Payment Config
+                const generalSnap = await getDoc(doc(db, "settings", "payments"));
+                if (generalSnap.exists()) {
+                    const data = generalSnap.data();
+                    
+                    // Fee
+                    if(data.applicationFee) {
+                        applicationFee = data.applicationFee;
+                        document.getElementById('feeAmount').textContent = `KES ${applicationFee}`;
+                    } else {
+                        document.getElementById('feeAmount').textContent = `KES 150`;
+                    }
+
+                    // Payment Mode Logic
+                    const mode = data.paymentMode || 'send_money'; // 'send_money' or 'buy_goods'
+                    const modeBadge = document.getElementById('paymentModeBadge');
+                    const payLabel = document.getElementById('paymentLabel');
+                    const payDest = document.getElementById('paymentDestination');
+
+                    if (mode === 'buy_goods') {
+                        modeBadge.textContent = 'BUY GOODS';
+                        payLabel.textContent = 'Till Number:';
+                        payDest.textContent = data.tillNumber || '000000';
+                    } else {
+                        modeBadge.textContent = 'SEND MONEY';
+                        payLabel.textContent = 'Send to:';
+                        payDest.textContent = data.adminPhone || '0700000000';
+                    }
+                }
+            } catch (e) { console.error("Config Error", e); }
+        }
+
+        // 3. Authentication
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                
+                // Prefill Form
+                if(user.email) document.getElementById('email').value = user.email;
+                if(user.displayName) document.getElementById('fullName').value = user.displayName;
+
+                // Load User for Drawer
+                const userSnap = await getDoc(doc(db, "users", user.uid));
+                if (userSnap.exists()) {
+                    const uData = userSnap.data();
+                    drawerName.textContent = uData.fullName || "Member";
+                    drawerAvatar.textContent = (uData.fullName || 'M').charAt(0).toUpperCase();
+                }
+
+                if (!jobId) {
+                    window.location.href = "jobs.html";
+                    return;
+                }
+
+                await Promise.all([
+                    loadAppConfig(),
+                    loadJobDetails(jobId),
+                    loadUserProfile(user.uid)
+                ]);
+
+                pageLoader.style.display = 'none';
+            } else {
+                if(jobId) sessionStorage.setItem('redirectJobId', jobId);
+                window.location.href = "signin.html";
+            }
+        });
+
+        // 4. Load Job Details
+        async function loadJobDetails(id) {
+            try {
+                const docRef = doc(db, "jobs", id);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    jobData = docSnap.data();
+                    document.getElementById('displayJobTitle').textContent = jobData.title;
+                    document.getElementById('displayCompany').textContent = jobData.company || "Confidential Client";
+                    document.getElementById('displaySalary').textContent = jobData.salary;
+                    document.getElementById('successJobTitle').textContent = jobData.title;
+                } else {
+                    alert("Job position no longer exists.");
+                    window.location.href = "jobs.html";
+                }
+            } catch (error) {
+                console.error("Job load error:", error);
+            }
+        }
+
+        // 5. Load User Profile
+        async function loadUserProfile(uid) {
+            try {
+                const docRef = doc(db, "users", uid);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if(data.fullName) document.getElementById('fullName').value = data.fullName;
+                    if(data.phone) document.getElementById('phone').value = data.phone;
+                    if(data.email) document.getElementById('email').value = data.email;
+                    if(data.location) document.getElementById('location').value = data.location;
+                    if(data.jobTitle) document.getElementById('experience').value = data.jobTitle; 
+
+                    if(data.dob) {
+                        const dob = new Date(data.dob);
+                        const diff_ms = Date.now() - dob.getTime();
+                        const age_dt = new Date(diff_ms); 
+                        const age = Math.abs(age_dt.getUTCFullYear() - 1970);
+                        document.getElementById('age').value = age;
+                    } else if (data.age) {
+                        document.getElementById('age').value = data.age;
+                    }
+                }
+            } catch (error) {
+                console.warn("Profile load incomplete, user must manual fill.");
+            }
+        }
+
+        // 6. Wizard Navigation
+        goToPaymentBtn.addEventListener('click', () => {
+            if(!applicationForm.checkValidity()) {
+                applicationForm.reportValidity();
+                return;
+            }
+
+            applicationForm.classList.add('hidden');
+            paymentSection.classList.remove('hidden');
+            
+            step1Ind.classList.remove('active');
+            step1Ind.classList.add('completed');
+            step2Ind.classList.add('active');
+            
+            window.scrollTo(0, 0);
+        });
+
+        backToDetailsBtn.addEventListener('click', () => {
+            paymentSection.classList.add('hidden');
+            applicationForm.classList.remove('hidden');
+
+            step1Ind.classList.add('active');
+            step1Ind.classList.remove('completed');
+            step2Ind.classList.remove('active');
+        });
+
+        // 7. SUBMISSION LOGIC (With User & Admin Notification)
+        submitApplicationBtn.addEventListener('click', async () => {
+            const mpesaCode = document.getElementById('mpesaCode').value.trim().toUpperCase();
+            
+            if (mpesaCode.length < 10) {
+                alert("Please enter a valid 10-digit M-Pesa code.");
+                return;
+            }
+
+            // UI Loading
+            submitApplicationBtn.disabled = true;
+            btnSpinner.style.display = 'block';
+            btnText.style.display = 'none';
+
+            try {
+                const batch = writeBatch(db);
+
+                // A. Application Doc Reference
+                const appRef = doc(collection(db, "applications"));
+                
+                // B. Data
+                batch.set(appRef, {
+                    userId: currentUser.uid,
+                    jobId: jobId,
+                    jobTitle: jobData.title,
+                    companyName: jobData.company || "Confidential",
+                    
+                    // User Data
+                    fullName: document.getElementById('fullName').value,
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phone').value,
+                    location: document.getElementById('location').value,
+                    age: document.getElementById('age').value,
+                    education: document.getElementById('education').value,
+                    experience: document.getElementById('experience').value,
+                    coverLetter: document.getElementById('coverLetter').value,
+                    
+                    // Payment
+                    mpesaCode: mpesaCode,
+                    amount: applicationFee,
+                    paymentStatus: 'Pending Review',
+                    
+                    // Meta
+                    status: 'Received', 
+                    appliedAt: serverTimestamp(),
+                    viewedByAdmin: false
+                });
+
+                // C. Admin Notification (Collection: adminNotifications)
+                const adminNotifRef = doc(collection(db, "adminNotifications"));
+                batch.set(adminNotifRef, {
+                    type: 'new_application',
+                    title: 'New Application Received',
+                    message: `${document.getElementById('fullName').value} applied for ${jobData.title}. Code: ${mpesaCode}`,
+                    read: false,
+                    createdAt: serverTimestamp(),
+                    link: 'admin-apps.html'
+                });
+
+                // D. User Notification (Collection: notifications) -> This populates the Notifications Page
+                const userNotifRef = doc(collection(db, "notifications"));
+                batch.set(userNotifRef, {
+                    userId: currentUser.uid,
+                    title: 'Application Received',
+                    message: `We have received your application for ${jobData.title}. Please wait while we verify your payment details.`,
+                    type: 'info',
+                    read: false,
+                    createdAt: serverTimestamp()
+                });
+
+                // Commit Batch
+                await batch.commit();
+
+                // E. Success UI
+                paymentSection.classList.add('hidden');
+                successSection.classList.remove('hidden');
+                
+                step2Ind.classList.remove('active');
+                step2Ind.classList.add('completed');
+                step3Ind.classList.add('completed');
+
+            } catch (error) {
+                console.error("Submission failed:", error);
+                alert("Submission failed. Please check your connection.");
+                
+                submitApplicationBtn.disabled = false;
+                btnSpinner.style.display = 'none';
+                btnText.style.display = 'block';
+            }
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>User Management | Hatua Admin</title>
+    <meta name="theme-color" content="#1A1A1A">
+
+    <!-- Manifest & Icons -->
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/images/icon-192.png">
+
+    <!-- Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    
+    <!-- PDF Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        :root {
+            /* HATUA BRANDING */
+            --primary-dark: #1A1A1A;    /* Charcoal */
+            --primary-light: #F8FAFC;   /* Off-white background */
+            --accent-gold: #D4AF37;     /* Gold */
+            --accent-gold-dim: #F9F1D8; /* Light Gold BG */
+            
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #F8FAFC;
+            --surface-white: #ffffff;
+            
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            
+            /* Status Colors */
+            --st-active-bg: #dcfce7; --st-active-txt: #166534;
+            --st-locked-bg: #fee2e2; --st-locked-txt: #991b1b;
+            
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-main);
+            background: url('assets/images/background.png') repeat, var(--bg-body);
+            background-size: 300px;
+            min-height: 100vh;
+            padding-bottom: 40px;
+            overflow-x: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        /* ---- HEADER ---- */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--glass-bg); backdrop-filter: blur(12px);
+            padding: 10px 5%; height: 70px;
+            z-index: 1000; box-shadow: var(--shadow-sm); border-bottom: 1px solid rgba(0,0,0,0.03);
+            position: fixed; top: 0; left: 0; right: 0;
+        }
+
+        .logo-con { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-con img { height: 35px; width: auto; }
+        .logo-text { font-size: 1.2rem; font-weight: 700; color: var(--primary-dark); font-family: 'Playfair Display', serif; }
+        .badge-admin { 
+            background: var(--primary-dark); color: var(--accent-gold); border: 1px solid var(--accent-gold);
+            padding: 2px 8px; border-radius: 4px; font-size: 0.6rem; font-weight: 700; 
+            text-transform: uppercase; margin-left: 5px; letter-spacing: 1px;
+        }
+
+        /* ---- HAMBURGER MENU STYLES ---- */
+        .hamburger-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(26, 26, 26, 0.05); color: var(--primary-dark);
+            border: none; cursor: pointer; display: grid; place-items: center;
+            font-size: 1.2rem; transition: var(--transition);
+            position: relative; z-index: 1002;
+        }
+        .hamburger-btn:hover { background: rgba(212, 175, 55, 0.1); color: var(--accent-gold); transform: rotate(90deg); }
+        
+        .nav-notification-dot {
+            position: absolute; top: 8px; right: 8px;
+            width: 10px; height: 10px; background: #ef4444;
+            border-radius: 50%; border: 2px solid #fff;
+            opacity: 0; transition: 0.3s; pointer-events: none;
+        }
+        .nav-notification-dot.show { opacity: 1; }
+
+        /* Menu Overlay & Drawer */
+        .menu-overlay {
+            position: fixed; inset: 0; background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            z-index: 2000; opacity: 0; pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .menu-overlay.active { opacity: 1; pointer-events: all; }
+
+        .side-drawer {
+            position: fixed; top: 0; right: 0; bottom: 0;
+            width: 85%; max-width: 320px;
+            background: #fff; z-index: 2001;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column;
+            border-left: 4px solid var(--accent-gold);
+        }
+        .side-drawer.active { transform: translateX(0); }
+
+        .drawer-header { 
+            padding: 30px 25px 25px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 15px; 
+            background: #fff;
+        }
+        .drawer-avatar { width: 50px; height: 50px; background: var(--primary-dark); color: var(--accent-gold); border-radius: 50%; display: grid; place-items: center; font-size: 1.2rem; font-weight: 700; border: 2px solid var(--accent-gold); }
+        .drawer-user h4 { font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 2px; font-weight: 700; }
+        .drawer-user p { font-size: 0.75rem; color: var(--accent-gold); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+        .drawer-links { padding: 20px 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .drawer-item { 
+            padding: 12px 20px; border-radius: 12px; text-decoration: none; color: #475569; 
+            font-weight: 600; display: flex; align-items: center; gap: 15px; transition: 0.2s; font-size: 0.95rem;
+        }
+        .drawer-item i { width: 20px; text-align: center; color: #94a3b8; transition: 0.2s; font-size: 1.1rem; }
+        
+        .drawer-item:hover, .drawer-item.active { background: var(--accent-gold-dim); color: var(--primary-dark); }
+        .drawer-item:hover i, .drawer-item.active i { color: var(--accent-gold); }
+        .drawer-item.active { border: 1px solid rgba(212, 175, 55, 0.2); }
+        
+        .drawer-badge {
+            margin-left: auto; background: #ef4444; color: #fff;
+            font-size: 0.75rem; padding: 2px 8px; border-radius: 10px;
+            opacity: 0;
+        }
+        .drawer-badge.show { opacity: 1; }
+
+        .drawer-footer { padding: 20px 25px; border-top: 1px solid #f1f5f9; background: #fff; }
+        .drawer-logout { 
+            width: 100%; padding: 14px; background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2;
+            border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; 
+            justify-content: center; gap: 10px; transition: 0.2s; font-family: var(--font-main);
+        }
+        .drawer-logout:hover { background: #fee2e2; border-color: #fecaca; }
+
+
+        /* ---- CONTENT ---- */
+        .container { margin-top: 90px; padding: 0 5%; max-width: 1200px; margin-left: auto; margin-right: auto; }
+        
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; animation: slideUp 0.4s ease-out; }
+        .page-title { font-size: 2rem; font-family: 'Playfair Display', serif; color: var(--primary-dark); font-weight: 700; margin-bottom: 8px; }
+        .page-sub { color: #64748b; font-size: 1rem; }
+        
+        /* Stats */
+        .stats-bar { display: flex; gap: 12px; flex-wrap: wrap; }
+        .stat-pill { 
+            background: white; padding: 12px 20px; border-radius: 50px; font-size: 0.95rem; font-weight: 600; 
+            color: #64748b; box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.05); 
+            display: flex; gap: 10px; align-items: center; transition: 0.2s; 
+        }
+        .stat-pill:hover { transform: translateY(-2px); border-color: var(--accent-gold); }
+        .stat-pill i { color: var(--accent-gold); font-size: 1.1rem; }
+
+        /* Controls */
+        .controls { 
+            background: white; padding: 20px; border-radius: 20px; box-shadow: var(--shadow-sm); 
+            display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 30px; align-items: center; 
+            animation: slideUp 0.5s ease-out; border: 1px solid rgba(0,0,0,0.04); border-left: 6px solid var(--accent-gold); 
+        }
+        
+        .search-wrap { flex: 1; min-width: 220px; position: relative; }
+        .search-wrap i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+        .inp-search { 
+            width: 100%; padding: 14px 18px 14px 45px; border-radius: 12px; border: 1px solid #cbd5e1; 
+            outline: none; background: #f8fafc; font-family: inherit; font-size: 0.95rem; transition: 0.2s; 
+        }
+        .inp-search:focus { border-color: var(--accent-gold); background: #fff; box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); }
+        
+        .sel-filter { 
+            padding: 14px; border-radius: 12px; border: 1px solid #cbd5e1; background: #f8fafc; 
+            outline: none; font-size: 0.95rem; cursor: pointer; font-family: inherit; transition: 0.2s; 
+        }
+        .sel-filter:focus { border-color: var(--accent-gold); background: #fff; }
+        
+        .btn-act { 
+            padding: 12px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; 
+            transition: 0.2s; display: flex; align-items: center; justify-content: center; 
+            min-width: 48px; gap: 8px; font-size: 0.9rem; font-family: var(--font-main);
+        }
+        .btn-ref { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+        .btn-ref:hover { background: var(--primary-dark); color: white; }
+        
+        .btn-export { 
+            background: var(--primary-dark); color: var(--accent-gold); padding-left: 20px; padding-right: 20px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid var(--primary-dark); font-weight: 700;
+        }
+        .btn-export:hover { transform: translateY(-2px); background: #000; box-shadow: 0 8px 25px rgba(0,0,0,0.2); border-color: var(--accent-gold); }
+        
+        .btn-bulk { 
+            background: var(--accent-gold); color: var(--primary-dark); display: none; padding-left: 20px; padding-right: 20px; 
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); font-weight: 800;
+        }
+        .btn-bulk:hover { transform: translateY(-2px); background: #b5952f; color: white; }
+
+        /* User List */
+        .user-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; animation: slideUp 0.6s ease-out; }
+        
+        .u-card {
+            background: white; border-radius: 24px; padding: 25px; border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: var(--shadow-sm); position: relative; transition: transform 0.2s, box-shadow 0.2s;
+            display: flex; flex-direction: column; gap: 15px; border-top: 4px solid transparent;
+        }
+        .u-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-top-color: var(--accent-gold); }
+        .u-card.selected { border: 2px solid var(--accent-gold); background: var(--accent-gold-dim); }
+
+        .u-top { display: flex; gap: 15px; align-items: flex-start; }
+        .u-img { 
+            width: 60px; height: 60px; border-radius: 18px; background: var(--primary-dark); 
+            color: var(--accent-gold); display: flex; align-items: center; justify-content: center; 
+            font-size: 1.5rem; font-weight: 700; flex-shrink: 0; 
+        }
+        .u-info h3 { font-size: 1.15rem; color: var(--primary-dark); font-weight: 800; margin-bottom: 4px; font-family: 'Playfair Display', serif; }
+        .u-info p { font-size: 0.9rem; color: #64748b; word-break: break-all; margin-bottom: 4px; }
+        .u-dept { font-size: 0.75rem; color: var(--accent-gold); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .u-chk { position: absolute; top: 20px; right: 20px; width: 24px; height: 24px; cursor: pointer; accent-color: var(--accent-gold); z-index: 5; }
+
+        .u-meta { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid #f1f5f9; margin-top: auto; }
+        .role-badge { padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; background: #f8fafc; color: #475569; letter-spacing: 0.5px; border: 1px solid #e2e8f0; }
+        .st-badge { padding: 6px 12px; border-radius: 30px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .st-act { background: var(--st-active-bg); color: var(--st-active-txt); }
+        .st-lock { background: var(--st-locked-bg); color: var(--st-locked-txt); }
+        
+        .u-actions { display: flex; gap: 10px; }
+        .act-icon { 
+            width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; border: 1px solid #e2e8f0; color: #64748b; font-size: 1.1rem; background: transparent; transition: 0.2s; 
+        }
+        .act-icon:hover { background: var(--primary-dark); color: var(--accent-gold); border-color: var(--primary-dark); transform: rotate(15deg); }
+
+        /* Advanced Modal */
+        .modal-bg { position: fixed; inset: 0; background: rgba(26, 26, 26, 0.7); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        .modal-main { 
+            background: white; width: 100%; max-width: 600px; border-radius: 24px; box-shadow: var(--shadow-lg); 
+            overflow: hidden; animation: slideUp 0.3s ease-out; display: flex; flex-direction: column; 
+            max-height: 90vh; border: 1px solid rgba(0,0,0,0.1); border-top: 6px solid var(--accent-gold);
+        }
+        
+        .m-head { padding: 25px 30px; background: #fff; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        .m-title { font-weight: 800; color: var(--primary-dark); font-size: 1.4rem; font-family: 'Playfair Display', serif; }
+        .m-close { background: #f1f5f9; border: none; font-size: 1.2rem; color: #64748b; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; transition: 0.2s; }
+        .m-close:hover { background: #fee2e2; color: var(--danger); transform: rotate(90deg); }
+
+        .m-tabs { display: flex; border-bottom: 1px solid #f1f5f9; background: #f8fafc; padding: 0 10px; }
+        .m-tab { flex: 1; padding: 18px; text-align: center; font-size: 0.95rem; font-weight: 700; color: #64748b; cursor: pointer; background: transparent; border: none; border-bottom: 3px solid transparent; transition: 0.2s; }
+        .m-tab.active { color: var(--primary-dark); border-bottom-color: var(--accent-gold); background: #fff; border-radius: 12px 12px 0 0; }
+        .m-tab:hover:not(.active) { color: #334155; }
+
+        .m-body { padding: 30px; overflow-y: auto; background: white; }
+        .m-section { display: none; animation: fadeIn 0.3s; }
+        .m-section.active { display: block; }
+        
+        .form-grp { margin-bottom: 24px; }
+        .lbl { display: block; font-size: 0.8rem; font-weight: 800; margin-bottom: 10px; color: #334155; text-transform: uppercase; letter-spacing: 1px; }
+        .inp { width: 100%; padding: 14px 18px; border-radius: 12px; border: 1px solid #cbd5e1; outline: none; font-family: inherit; font-size: 1rem; transition: 0.2s; }
+        .inp:focus { border-color: var(--accent-gold); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); }
+        
+        .btn-sec { 
+            width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 12px; border: 1px solid #e2e8f0; 
+            background: white; font-weight: 700; color: #475569; cursor: pointer; display: flex; 
+            align-items: center; justify-content: center; gap: 10px; transition: 0.2s; font-size: 1rem; 
+        }
+        .btn-sec:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+        .btn-primary { background: var(--primary-dark); color: var(--accent-gold); border-color: var(--primary-dark); }
+        .btn-primary:hover { background: #000; border-color: #000; }
+        .btn-danger { color: var(--danger); border-color: #fecaca; background: #fef2f2; }
+        .btn-danger:hover { background: #fee2e2; }
+
+        #toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: var(--primary-dark); color: var(--accent-gold); padding: 14px 28px; border-radius: 50px; font-weight: 600; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 3000; box-shadow: 0 10px 30px rgba(0,0,0,0.3); white-space: nowrap; border: 1px solid var(--accent-gold); }
+        #toast.show { opacity: 1; bottom: 50px; }
+        
+        #page-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        .spinner { width: 45px; height: 45px; border: 4px solid #e2e8f0; border-top: 4px solid var(--accent-gold); border-radius: 50%; animation: spin 1s linear infinite; }
+        
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        @media(max-width: 600px) { .controls { flex-direction: column; align-items: stretch; gap: 12px; } .search-wrap i { top: 22px; } }
+    </style>
+</head>
+<body>
+
+    <div id="page-loader"><div class="spinner"></div></div>
+
+    <!-- HEADER -->
+    <header id="header">
+        <a href="admin-dashboard.html" class="logo-con">
+            <img src="assets/images/logo.png" alt="Logo">
+            <span class="logo-text">Hatua</span>
+            <span class="badge-admin">Admin</span>
+        </a>
+        
+        <!-- Hamburger Trigger -->
+        <button class="hamburger-btn" id="menuTrigger">
+            <i class="fas fa-bars"></i>
+            <div class="nav-notification-dot" id="menuBadge"></div>
+        </button>
+    </header>
+
+    <!-- NAVIGATION OVERLAY & DRAWER -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+    <aside class="side-drawer" id="sideDrawer">
+        <div class="drawer-header">
+            <div class="drawer-avatar" id="drawerAvatar">A</div>
+            <div class="drawer-user">
+                <h4 id="drawerName">Admin</h4>
+                <p>Master Admin</p>
+            </div>
+        </div>
+        
+        <!-- UPDATED NAVIGATION -->
+        <div class="drawer-links">
+            <a href="admin-dashboard.html" class="drawer-item"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="admin-users.html" class="drawer-item active"><i class="fas fa-users"></i> Manage Users</a>
+            <a href="admin-apps.html" class="drawer-item"><i class="fas fa-clipboard-list"></i> Applications</a>
+            <a href="admin-testimonials.html" class="drawer-item"><i class="fas fa-comment-alt"></i> Testimonials</a>
+            <a href="admin-post-job.html" class="drawer-item"><i class="fas fa-plus-circle"></i> Post Job</a>
+            <a href="admin-manage-job.html" class="drawer-item"><i class="fas fa-briefcase"></i> Manage Jobs</a>
+            <a href="admin-support.html" class="drawer-item">
+                <i class="fas fa-headset"></i> Support
+                <span class="drawer-badge" id="drawerMsgBadge">0</span>
+            </a>
+            <a href="admin-settings.html" class="drawer-item"><i class="fas fa-cogs"></i> Master Settings</a>
+            <a href="admin-logs.html" class="drawer-item"><i class="fas fa-list-alt"></i> Logs</a>
+            <a href="admin-reports.html" class="drawer-item"><i class="fas fa-chart-line"></i> Analytics</a>
+            <a href="admin-profile.html" class="drawer-item"><i class="fas fa-user-circle"></i> Profile</a>
+        </div>
+
+        <div class="drawer-footer">
+            <button id="logoutBtn" class="drawer-logout">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <div class="container">
+        
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">User Management</h1>
+                <p class="page-sub">Manage security, roles, and perform bulk actions.</p>
+            </div>
+            <div class="stats-bar">
+                <div class="stat-pill"><i class="fas fa-users"></i> <strong style="color:var(--primary-dark)" id="countTotal">0</strong> Users</div>
+                <div class="stat-pill"><i class="fas fa-shield-alt"></i> <strong style="color:var(--primary-dark)" id="countAdmin">0</strong> Admins</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="search-wrap"><i class="fas fa-search"></i><input type="text" id="inpSearch" class="inp-search" placeholder="Search by name or email..."></div>
+            <select id="selRole" class="sel-filter"><option value="all">All Roles</option><option value="user">User</option><option value="admin">Admin</option></select>
+            <select id="selStatus" class="sel-filter"><option value="all">All Status</option><option value="active">Active</option><option value="locked">Locked</option></select>
+            <div style="flex:1; display:flex; justify-content:flex-end; gap:10px;">
+                <button id="btnBulk" class="btn-act btn-bulk" onclick="openBulkAction()"><i class="fas fa-layer-group"></i> Manage</button>
+                <button id="btnExport" class="btn-act btn-export" onclick="exportAdvancedPDF()"><i class="fas fa-file-pdf"></i> Report</button>
+                <button onclick="fetchUsers(true)" class="btn-act btn-ref" title="Refresh List"><i class="fas fa-sync-alt"></i></button>
+            </div>
+        </div>
+
+        <div id="userGrid" class="user-grid"></div>
+        <div style="text-align:center; margin-top:40px;"><button id="btnLoadMore" style="background:white; border:1px solid #cbd5e1; padding:14px 32px; border-radius:50px; color:#64748b; font-weight:700; cursor:pointer; transition:0.2s; box-shadow:var(--shadow-sm);">Load More</button></div>
+
+    </div>
+
+    <!-- ADVANCED USER MODAL -->
+    <div id="userModal" class="modal-bg">
+        <div class="modal-main">
+            <div class="m-head">
+                <div class="m-title">User Details</div>
+                <button class="m-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="m-tabs">
+                <button class="m-tab active" onclick="switchTab('overview')">Overview</button>
+                <button class="m-tab" onclick="switchTab('security')">Security & Access</button>
+            </div>
+
+            <div class="m-body">
+                <input type="hidden" id="modalUserId">
+                
+                <!-- Tab 1: Overview -->
+                <div id="tab-overview" class="m-section active">
+                    <div class="form-grp">
+                        <label class="lbl">Full Name</label>
+                        <input type="text" id="editName" class="inp" disabled style="background:#f1f5f9; color:#64748b;">
+                    </div>
+                    <div class="form-grp">
+                        <label class="lbl">Department / Team</label>
+                        <select id="editDept" class="inp" style="background:white;">
+                            <option value="General">General</option>
+                            <option value="Engineering">Engineering</option>
+                            <option value="HR">HR & Recruitment</option>
+                            <option value="Sales">Sales & Marketing</option>
+                            <option value="Finance">Finance</option>
+                        </select>
+                    </div>
+                    <div class="form-grp">
+                        <label class="lbl">Role Assignment</label>
+                        <select id="editRole" class="inp" style="background:white;">
+                            <option value="user">Standard User</option>
+                            <option value="admin">Administrator</option>
+                        </select>
+                    </div>
+                    <button class="btn-sec btn-primary" onclick="saveOverview()">Save Profile Changes</button>
+                </div>
+
+                <!-- Tab 2: Security -->
+                <div id="tab-security" class="m-section">
+                    <div class="form-grp">
+                        <label class="lbl">Account Status</label>
+                        <select id="editStatus" class="inp">
+                            <option value="active">Active (Access Granted)</option>
+                            <option value="locked">Locked (Prevent Login)</option>
+                        </select>
+                    </div>
+                    <button class="btn-sec" onclick="triggerPasswordReset()"><i class="fas fa-key"></i> Send Password Reset Email</button>
+                    <button class="btn-sec btn-danger" onclick="deleteUserAction()"><i class="fas fa-trash-alt"></i> Permanently Delete Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast">Action Completed</div>
+
+    <script type="module">
+        import { auth, db } from './config.js'; 
+        import { onAuthStateChanged, sendPasswordResetEmail, signOut } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
+        import { collection, query, limit, getDocs, startAfter, doc, updateDoc, deleteDoc, getDoc, where, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
+
+        // --- GLOBAL STATE ---
+        const userGrid = document.getElementById('userGrid');
+        const loadMoreBtn = document.getElementById('btnLoadMore');
+        const searchInp = document.getElementById('inpSearch');
+        const filterRole = document.getElementById('selRole');
+        const filterStatus = document.getElementById('selStatus');
+        const modal = document.getElementById('userModal');
+        const toast = document.getElementById('toast');
+        const btnBulk = document.getElementById('btnBulk');
+
+        // Drawer Elements
+        const menuTrigger = document.getElementById('menuTrigger');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const sideDrawer = document.getElementById('sideDrawer');
+        const drawerName = document.getElementById('drawerName');
+        const drawerAvatar = document.getElementById('drawerAvatar');
+        const menuBadge = document.getElementById('menuBadge');
+        const drawerMsgBadge = document.getElementById('drawerMsgBadge');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        let allUsers = []; 
+        let lastDoc = null; 
+        let selectedIds = new Set();
+        let currentUserEmail = "";
+
+        // --- 1. AUTH & INIT ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const uDoc = await getDoc(doc(db, "users", user.uid));
+                if (uDoc.exists() && (uDoc.data().role === 'admin' || uDoc.data().isAdmin)) {
+                    const userData = uDoc.data();
+                    drawerName.textContent = userData.fullName || "Admin";
+                    drawerAvatar.textContent = (userData.fullName || 'A').charAt(0).toUpperCase();
+                    
+                    currentUserEmail = user.email;
+                    checkSupportMessages();
+                    fetchUsers(true);
+                    document.getElementById('page-loader').style.display = 'none';
+                } else { window.location.href = "signin.html"; }
+            } else { window.location.href = "signin.html"; }
+        });
+
+        // --- 2. DATA FETCHING (Robust) ---
+        window.fetchUsers = async (reset = false) => {
+            if(reset) { userGrid.innerHTML = ''; allUsers = []; lastDoc = null; selectedIds.clear(); updateBulkBtn(); }
+            loadMoreBtn.textContent = 'Loading...';
+            
+            try {
+                let q = query(collection(db, "users"), limit(50));
+                if (lastDoc) q = query(collection(db, "users"), startAfter(lastDoc), limit(50));
+
+                const snap = await getDocs(q);
+                if(snap.empty) { loadMoreBtn.style.display = 'none'; return; }
+
+                lastDoc = snap.docs[snap.docs.length-1];
+                
+                snap.forEach(d => {
+                    const u = { id: d.id, ...d.data() };
+                    if(!allUsers.find(exist => exist.id === u.id)) allUsers.push(u);
+                });
+
+                updateStats();
+                applyFilters(); 
+                loadMoreBtn.textContent = 'Load More';
+
+            } catch(e) { console.error(e); showToast('Error loading users'); }
+        };
+
+        function updateStats() {
+            document.getElementById('countTotal').textContent = allUsers.length;
+            document.getElementById('countAdmin').textContent = allUsers.filter(u=>u.role==='admin').length;
+        }
+
+        // --- 3. RENDERING & FILTERING ---
+        function applyFilters() {
+            const term = searchInp.value.toLowerCase();
+            const r = filterRole.value;
+            const s = filterStatus.value;
+            
+            userGrid.innerHTML = '';
+            
+            const filtered = allUsers.filter(u => {
+                const matchTerm = (u.fullName||'').toLowerCase().includes(term) || (u.email||'').toLowerCase().includes(term);
+                const matchRole = r === 'all' || u.role === r;
+                const userStatus = u.status || 'active';
+                const matchStatus = s === 'all' || userStatus === s;
+                return matchTerm && matchRole && matchStatus;
+            });
+
+            if(filtered.length === 0) userGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8; background:white; border-radius:16px; border:1px dashed #cbd5e1;">No matching users found.</div>';
+            
+            filtered.forEach(u => renderCard(u));
+        }
+
+        function renderCard(u) {
+            const initial = (u.fullName||'?').charAt(0).toUpperCase();
+            const isSel = selectedIds.has(u.id);
+            const status = u.status || 'active';
+            const statusLabel = status === 'locked' ? 'Locked' : 'Active';
+            const statusClass = status === 'locked' ? 'st-lock' : 'st-act';
+
+            const div = document.createElement('div');
+            div.className = `u-card ${isSel?'selected':''}`;
+            
+            div.onclick = (e) => { 
+                if(e.target.classList.contains('u-chk')) return;
+                openModal(u.id); 
+            };
+            
+            div.innerHTML = `
+                <input type="checkbox" class="u-chk" ${isSel?'checked':''} onchange="toggleSelect('${u.id}', this)">
+                <div class="u-top">
+                    <div class="u-img">${initial}</div>
+                    <div class="u-info">
+                        <h3>${u.fullName||'User'}</h3>
+                        <p>${u.email||'No Email'}</p>
+                        <div class="u-dept"><i class="fas fa-briefcase" style="margin-right:4px;"></i>${u.department || 'General'}</div>
+                    </div>
+                </div>
+                <div class="u-meta">
+                    <div style="display:flex; gap:8px;">
+                        <span class="role-badge">${u.role||'User'}</span>
+                        <span class="st-badge ${statusClass}">${statusLabel}</span>
+                    </div>
+                    <div class="u-actions">
+                        <button class="act-icon" onclick="event.stopPropagation(); openModal('${u.id}')"><i class="fas fa-edit"></i></button>
+                    </div>
+                </div>
+            `;
+            userGrid.appendChild(div);
+        }
+
+        searchInp.addEventListener('input', applyFilters);
+        filterRole.addEventListener('change', applyFilters);
+        filterStatus.addEventListener('change', applyFilters);
+        loadMoreBtn.addEventListener('click', () => fetchUsers(false));
+
+        // --- 4. BULK ACTIONS ---
+        window.toggleSelect = (id, chk) => {
+            if(chk.checked) selectedIds.add(id); else selectedIds.delete(id);
+            updateBulkBtn();
+            const card = chk.closest('.u-card');
+            if(chk.checked) card.classList.add('selected'); else card.classList.remove('selected');
+        };
+        
+        function updateBulkBtn() {
+            btnBulk.style.display = selectedIds.size > 0 ? 'flex' : 'none';
+            btnBulk.innerHTML = `<i class="fas fa-layer-group"></i> Actions (${selectedIds.size})`;
+        }
+
+        window.openBulkAction = async () => {
+            const action = prompt("Type 'lock', 'unlock', or 'delete' to apply to selected users:");
+            if(!action) return;
+
+            if(action === 'delete' && !confirm(`WARNING: You are about to DELETE ${selectedIds.size} users. This cannot be undone.`)) return;
+
+            let updates = 0;
+            for(let id of selectedIds) {
+                try {
+                    const ref = doc(db, "users", id);
+                    if(action === 'lock') await updateDoc(ref, { status: 'locked' });
+                    if(action === 'unlock') await updateDoc(ref, { status: 'active' });
+                    if(action === 'delete') await deleteDoc(ref);
+                    
+                    updates++;
+                } catch(e) { console.error(e); }
+            }
+            
+            showToast(`Processed ${updates} users.`);
+            selectedIds.clear();
+            fetchUsers(true);
+        }
+
+        // --- 5. MODAL LOGIC & WRITES ---
+        let currentModalUser = null;
+        window.openModal = (id) => {
+            currentModalUser = allUsers.find(u => u.id === id);
+            if(!currentModalUser) return;
+            document.getElementById('modalUserId').value = id;
+            document.getElementById('editName').value = currentModalUser.fullName || '';
+            document.getElementById('editDept').value = currentModalUser.department || 'General';
+            document.getElementById('editRole').value = currentModalUser.role || 'user';
+            document.getElementById('editStatus').value = currentModalUser.status || 'active';
+            switchTab('overview');
+            modal.style.display = 'flex';
+        };
+        window.closeModal = () => { modal.style.display = 'none'; };
+
+        window.switchTab = (tabName) => {
+            document.querySelectorAll('.m-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.m-section').forEach(s => s.classList.remove('active'));
+            const tabs = document.querySelectorAll('.m-tab');
+            if(tabName === 'overview') tabs[0].classList.add('active');
+            if(tabName === 'security') tabs[1].classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        };
+
+        window.saveOverview = async () => {
+            const id = document.getElementById('modalUserId').value;
+            const dept = document.getElementById('editDept').value;
+            const role = document.getElementById('editRole').value;
+            const status = document.getElementById('editStatus').value; 
+            
+            try {
+                await updateDoc(doc(db, "users", id), { department: dept, role: role, status: status });
+                const u = allUsers.find(u=>u.id===id); 
+                if(u) { u.department=dept; u.role=role; u.status=status; }
+                applyFilters();
+                showToast("Profile Updated");
+                closeModal();
+            } catch(e) { showToast("Error Saving"); }
+        };
+
+        window.triggerPasswordReset = async () => {
+            if(!currentModalUser.email) return showToast("No email found");
+            try { await sendPasswordResetEmail(auth, currentModalUser.email); showToast("Reset Email Sent"); } 
+            catch(e) { showToast("Error Sending Email"); }
+        };
+
+        window.deleteUserAction = async () => {
+            if(!confirm("Are you sure you want to PERMANENTLY delete this user? This cannot be undone.")) return;
+            try {
+                await deleteDoc(doc(db, "users", currentModalUser.id));
+                allUsers = allUsers.filter(u=>u.id!==currentModalUser.id);
+                closeModal();
+                applyFilters();
+                showToast("User Deleted");
+            } catch(e) { showToast("Delete Failed"); }
+        };
+
+        // --- 6. ADVANCED PDF EXPORT (Masking & Logo) ---
+        window.exportAdvancedPDF = async () => {
+            if(allUsers.length === 0) return showToast("No data to export");
+            showToast("Generating PDF...");
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Load logo
+            const img = new Image();
+            img.src = 'assets/images/logo.png';
+            
+            img.onload = () => {
+                doc.addImage(img, 'PNG', 14, 10, 20, 20);
+                generatePDFBody(doc);
+            };
+            img.onerror = () => { generatePDFBody(doc); };
+
+            function generatePDFBody(pdfDoc) {
+                // Header Block
+                pdfDoc.setFillColor(26, 26, 26); // Charcoal
+                pdfDoc.rect(0, 0, 210, 35, 'F');
+                
+                pdfDoc.setFont("helvetica", "bold");
+                pdfDoc.setFontSize(18);
+                pdfDoc.setTextColor(212, 175, 55); // Gold
+                pdfDoc.text("Hatua User Directory", 40, 22);
+                
+                pdfDoc.setFont("helvetica", "normal");
+                pdfDoc.setFontSize(10);
+                pdfDoc.setTextColor(255, 255, 255);
+                pdfDoc.text(`Generated by: ${currentUserEmail} | ${new Date().toLocaleString()}`, 40, 29);
+
+                // Table Data with Masking
+                const rows = allUsers.map(u => {
+                    const maskedEmail = maskData(u.email || '', 'email');
+                    const maskedPhone = maskData(u.phone || '', 'phone');
+                    return [
+                        u.fullName || 'N/A',
+                        maskedEmail,
+                        maskedPhone,
+                        u.department || 'General',
+                        (u.role || 'User').toUpperCase(),
+                        (u.status || 'Active').toUpperCase()
+                    ];
+                });
+
+                pdfDoc.autoTable({
+                    startY: 40,
+                    head: [['Name', 'Email', 'Phone', 'Dept', 'Role', 'Status']],
+                    body: rows,
+                    theme: 'striped',
+                    styles: { fontSize: 9, cellPadding: 4 },
+                    headStyles: { fillColor: [26, 26, 26], textColor: [255,255,255] },
+                    didDrawPage: function (data) {
+                        let str = 'Page ' + pdfDoc.internal.getNumberOfPages();
+                        pdfDoc.setFontSize(8);
+                        pdfDoc.setTextColor(100);
+                        const pageSize = pdfDoc.internal.pageSize;
+                        const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+                        pdfDoc.text(str, data.settings.margin.left, pageHeight - 10);
+                        pdfDoc.text("Confidential - Admin Eyes Only", pageSize.width - 60, pageHeight - 10);
+                    }
+                });
+
+                pdfDoc.save('Hatua_Users_Report.pdf');
+                showToast("PDF Downloaded");
+            }
+        };
+
+        function maskData(str, type) {
+            if(!str) return '-';
+            if(type === 'email') {
+                const parts = str.split('@');
+                if(parts.length < 2) return str;
+                return parts[0].substring(0, 3) + '***@' + parts[1];
+            }
+            if(type === 'phone') {
+                if(str.length < 5) return str;
+                return str.substring(0, 4) + '****' + str.slice(-2);
+            }
+            return str;
+        }
+
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(()=>toast.classList.remove('show'), 3000);
+        }
+
+        // --- CHECK MESSAGES (For Badge) ---
+        function checkSupportMessages() {
+            const q = query(collection(db, "support_tickets"), where("hasUnreadAdmin", "==", true));
+            onSnapshot(q, (snap) => {
+                const count = snap.docs.filter(d => d.data().status !== 'resolved').length;
+                if(count > 0) {
+                    menuBadge.classList.add('show');
+                    drawerMsgBadge.textContent = count > 9 ? '9+' : count;
+                    drawerMsgBadge.classList.add('show');
+                } else {
+                    menuBadge.classList.remove('show');
+                    drawerMsgBadge.classList.remove('show');
+                }
+            });
+        }
+
+        // --- DRAWER LOGIC ---
+        function toggleDrawer() {
+            sideDrawer.classList.toggle('active');
+            menuOverlay.classList.toggle('active');
+        }
+
+        function closeDrawer() {
+            sideDrawer.classList.remove('active');
+            menuOverlay.classList.remove('active');
+        }
+
+        menuTrigger.addEventListener('click', toggleDrawer);
+        menuOverlay.addEventListener('click', closeDrawer);
+        
+        sideDrawer.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', closeDrawer);
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            await signOut(auth);
+            window.location.href = "signin.html";
+        });
+
+    </script>
+</body>
+</html>

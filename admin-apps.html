@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Manage Applications | Hatua Admin</title>
+    <meta name="theme-color" content="#1A1A1A">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/images/icon-192.png">
+
+    <!-- Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    
+    <!-- PDF Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        :root {
+            /* HATUA BRANDING */
+            --primary-dark: #1A1A1A;    /* Charcoal */
+            --primary-light: #F8FAFC;   /* Off-white background */
+            --accent-gold: #D4AF37;     /* Gold */
+            --accent-gold-dim: #F9F1D8; /* Light Gold BG */
+            
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #F8FAFC;
+            --surface-white: #ffffff;
+            
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            
+            /* Status Colors */
+            --st-received-bg: #f3f4f6; --st-received-txt: #4b5563;
+            --st-review-bg: #e0f2fe; --st-review-txt: #0369a1;
+            --st-verified-bg: #dcfce7; --st-verified-txt: #166534;
+            --st-short-bg: #fef3c7; --st-short-txt: #b45309;
+            --st-hired-bg: var(--accent-gold); --st-hired-txt: #fff;
+            --st-danger-bg: #fee2e2; --st-danger-txt: #991b1b;
+
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-main);
+            background: url('assets/images/background.png') repeat, var(--bg-body);
+            background-size: 300px;
+            min-height: 100vh;
+            padding-bottom: 40px;
+            overflow-x: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        /* ---- HEADER ---- */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--glass-bg); backdrop-filter: blur(12px);
+            padding: 10px 5%; height: 70px;
+            z-index: 1000; box-shadow: var(--shadow-sm); border-bottom: 1px solid rgba(0,0,0,0.03);
+            position: fixed; top: 0; left: 0; right: 0;
+        }
+        
+        .logo-con { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-con img { height: 35px; width: auto; }
+        .logo-text { font-size: 1.2rem; font-weight: 700; color: var(--primary-dark); font-family: 'Playfair Display', serif; }
+        .badge-admin { 
+            background: var(--primary-dark); color: var(--accent-gold); border: 1px solid var(--accent-gold);
+            padding: 2px 8px; border-radius: 4px; font-size: 0.6rem; font-weight: 700; 
+            text-transform: uppercase; margin-left: 5px; letter-spacing: 1px;
+        }
+
+        /* ---- HAMBURGER MENU STYLES ---- */
+        .hamburger-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(26, 26, 26, 0.05); color: var(--primary-dark);
+            border: none; cursor: pointer; display: grid; place-items: center;
+            font-size: 1.2rem; transition: var(--transition);
+            position: relative; z-index: 1002;
+        }
+        .hamburger-btn:hover { background: rgba(212, 175, 55, 0.1); color: var(--accent-gold); transform: rotate(90deg); }
+        
+        .nav-notification-dot {
+            position: absolute; top: 8px; right: 8px;
+            width: 10px; height: 10px; background: #ef4444;
+            border-radius: 50%; border: 2px solid #fff;
+            opacity: 0; transition: 0.3s; pointer-events: none;
+        }
+        .nav-notification-dot.show { opacity: 1; }
+
+        /* Menu Overlay & Drawer */
+        .menu-overlay {
+            position: fixed; inset: 0; background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            z-index: 2000; opacity: 0; pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .menu-overlay.active { opacity: 1; pointer-events: all; }
+
+        .side-drawer {
+            position: fixed; top: 0; right: 0; bottom: 0;
+            width: 85%; max-width: 320px;
+            background: #fff; z-index: 2001;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column;
+            border-left: 4px solid var(--accent-gold);
+        }
+        .side-drawer.active { transform: translateX(0); }
+
+        .drawer-header { 
+            padding: 30px 25px 25px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 15px; 
+            background: #fff;
+        }
+        .drawer-avatar { width: 50px; height: 50px; background: var(--primary-dark); color: var(--accent-gold); border-radius: 50%; display: grid; place-items: center; font-size: 1.2rem; font-weight: 700; border: 2px solid var(--accent-gold); }
+        .drawer-user h4 { font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 2px; font-weight: 700; }
+        .drawer-user p { font-size: 0.75rem; color: var(--accent-gold); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+        .drawer-links { padding: 20px 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .drawer-item { 
+            padding: 12px 20px; border-radius: 12px; text-decoration: none; color: #475569; 
+            font-weight: 600; display: flex; align-items: center; gap: 15px; transition: 0.2s; font-size: 0.95rem;
+        }
+        .drawer-item i { width: 20px; text-align: center; color: #94a3b8; transition: 0.2s; font-size: 1.1rem; }
+        
+        .drawer-item:hover, .drawer-item.active { background: var(--accent-gold-dim); color: var(--primary-dark); }
+        .drawer-item:hover i, .drawer-item.active i { color: var(--accent-gold); }
+        .drawer-item.active { border: 1px solid rgba(212, 175, 55, 0.2); }
+        
+        .drawer-badge {
+            margin-left: auto; background: #ef4444; color: #fff;
+            font-size: 0.75rem; padding: 2px 8px; border-radius: 10px;
+            opacity: 0;
+        }
+        .drawer-badge.show { opacity: 1; }
+
+        .drawer-footer { padding: 20px 25px; border-top: 1px solid #f1f5f9; background: #fff; }
+        .drawer-logout { 
+            width: 100%; padding: 14px; background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2;
+            border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; 
+            justify-content: center; gap: 10px; transition: 0.2s; font-family: var(--font-main);
+        }
+        .drawer-logout:hover { background: #fee2e2; border-color: #fecaca; }
+
+        /* CONTENT */
+        .container { margin-top: 90px; padding: 0 5%; max-width: 1200px; margin-left: auto; margin-right: auto; padding-bottom: 40px; }
+
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; animation: slideUp 0.4s ease-out; }
+        .page-title { font-size: 2rem; font-family: 'Playfair Display', serif; color: var(--primary-dark); font-weight: 700; margin-bottom: 8px; }
+        
+        .btn-pdf { 
+            background: var(--primary-dark); color: var(--accent-gold); padding: 12px 24px; border-radius: 50px; 
+            font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; 
+            font-size: 0.9rem; border: none; cursor: pointer; transition:0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+        }
+        .btn-pdf:hover { background: #000; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(212, 175, 55, 0.2); }
+
+        /* FILTERS */
+        .controls { 
+            background: white; padding: 20px; border-radius: 20px; box-shadow: var(--shadow-sm); margin-bottom: 30px; 
+            display: flex; gap: 15px; flex-wrap: wrap; border: 1px solid rgba(0,0,0,0.04); animation: slideUp 0.5s ease-out; 
+            position: relative; overflow: hidden; border-left: 6px solid var(--accent-gold);
+        }
+        
+        .inp-search { 
+            flex: 1; padding: 14px 18px; border-radius: 12px; border: 1px solid #cbd5e1; outline: none; background: #f8fafc; 
+            min-width: 220px; font-family: inherit; font-size: 0.95rem; transition: 0.2s; 
+        }
+        .inp-search:focus, .sel-filter:focus { border-color: var(--accent-gold); background: #fff; box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); }
+        .sel-filter { 
+            padding: 14px; border-radius: 12px; border: 1px solid #cbd5e1; background: #f8fafc; outline: none; 
+            cursor: pointer; font-family: inherit; font-size: 0.95rem; 
+        }
+
+        /* GRID */
+        .apps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; animation: slideUp 0.6s ease-out; }
+
+        .app-card {
+            background: white; border-radius: 24px; padding: 25px;
+            box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-top: 4px solid transparent;
+        }
+        .app-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-top-color: var(--accent-gold); }
+
+        .c-head { display: flex; justify-content: space-between; margin-bottom: 12px; align-items: flex-start; }
+        .c-name { font-size: 1.15rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 4px; font-family: 'Playfair Display', serif; }
+        .c-date { font-size: 0.8rem; color: #94a3b8; font-weight: 600; }
+        .c-job { font-size: 0.9rem; color: #64748b; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .c-job i { color: var(--accent-gold); }
+
+        /* STATUS BADGES */
+        .st-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; width: fit-content; }
+        .st-Received { background: var(--st-received-bg); color: var(--st-received-txt); }
+        .st-Review { background: var(--st-review-bg); color: var(--st-review-txt); }
+        .st-Verified { background: var(--st-verified-bg); color: var(--st-verified-txt); }
+        .st-Shortlisted { background: var(--st-short-bg); color: var(--st-short-txt); }
+        .st-Hired { background: var(--st-hired-bg); color: #000; box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3); font-weight: 900; }
+        .st-Rejected { background: var(--st-danger-bg); color: var(--st-danger-txt); }
+
+        .c-foot { margin-top: auto; padding-top: 20px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; gap:10px; }
+        .code-txt { font-family: monospace; font-weight: 700; color: #475569; background: #f1f5f9; padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #e2e8f0; }
+        
+        .btn-view { 
+            background: #f8fafc; color: var(--primary-dark); padding: 10px 18px; border-radius: 12px; font-weight: 700; 
+            font-size: 0.85rem; cursor: pointer; border: 1px solid #e2e8f0; display: flex; align-items: center; 
+            gap: 8px; transition: 0.2s; font-family: var(--font-main);
+        }
+        .btn-view:hover { background: var(--primary-dark); color: var(--accent-gold); border-color: var(--primary-dark); transform: translateY(-2px); }
+
+        .btn-msg {
+            background: #f0f9ff; color: #0284c7; padding: 10px 14px; border-radius: 12px; font-weight: 700; 
+            font-size: 0.85rem; cursor: pointer; border: 1px solid #e0f2fe; display: flex; align-items: center; 
+            justify-content: center; transition: 0.2s;
+        }
+        .btn-msg:hover { background: #0284c7; color: #fff; transform: translateY(-2px); }
+
+        /* MODAL */
+        .modal-bg { position: fixed; inset: 0; background: rgba(26, 26, 26, 0.7); backdrop-filter: blur(8px); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-main { 
+            background: white; width: 100%; max-width: 650px; border-radius: 24px; box-shadow: var(--shadow-lg); 
+            overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; animation: slideUp 0.3s ease-out; 
+            border: 1px solid rgba(0,0,0,0.1); border-top: 6px solid var(--accent-gold);
+        }
+        
+        .m-head { background: #fff; padding: 25px 30px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        .m-title { font-size: 1.4rem; font-weight: 800; color: var(--primary-dark); font-family: 'Playfair Display', serif; }
+        .m-close { background: #f1f5f9; border: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 1.2rem; color: #64748b; cursor: pointer; transition: 0.2s; }
+        .m-close:hover { background: #fee2e2; color: var(--danger); transform: rotate(90deg); }
+
+        .m-body { padding: 0; overflow-y: auto; flex: 1; }
+        .info-sec { padding: 25px 30px; border-bottom: 1px solid #f1f5f9; }
+        .sec-lbl { font-size: 0.8rem; text-transform: uppercase; color: #94a3b8; font-weight: 800; margin-bottom: 15px; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+        .sec-lbl i { color: var(--accent-gold); font-size: 0.9rem; }
+        
+        .data-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .d-itm label { display: block; font-size: 0.75rem; color: #64748b; margin-bottom: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .d-itm p { font-size: 1rem; color: var(--primary-dark); font-weight: 600; word-break: break-word; }
+
+        /* MANAGE ACTIONS */
+        .m-actions { background: #f8fafc; padding: 30px; border-top: 1px solid #e2e8f0; }
+        .act-lbl { text-align: center; font-size: 0.9rem; color: #64748b; margin-bottom: 15px; font-weight: 700; }
+        .wf-container { display: flex; flex-direction: column; gap: 12px; }
+        
+        .wf-btn { 
+            padding: 16px; border-radius: 14px; border: 1px solid transparent; background: white; color: #475569; 
+            font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; 
+            gap: 10px; transition: 0.2s; font-size: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-family: var(--font-main);
+        }
+        .wf-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        .btn-start-review { background: #e0f2fe; color: #0284c7; border-color: #bae6fd; }
+        .btn-verify { background: #dcfce7; color: #166534; border-color: #86efac; }
+        .btn-shortlist { background: #fef3c7; color: #b45309; border-color: #fcd34d; }
+        .btn-hire { background: var(--primary-dark); color: var(--accent-gold); border-color: var(--primary-dark); }
+        .btn-hire:hover { background: #000; color: #fff; }
+        .btn-reject { background: #fef2f2; color: #991b1b; border-color: #fecaca; margin-top: 15px; }
+        .btn-reject:hover { background: #fee2e2; border-color: #fca5a5; }
+
+        .reject-box { display: none; margin-top: 15px; animation: fadeIn 0.3s; background: white; padding: 20px; border-radius: 16px; border: 1px dashed #fecaca; }
+        .reject-box.show { display: block; }
+        .rj-inp { width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 12px; margin-bottom: 12px; font-family: inherit; font-size: 0.95rem; outline: none; }
+        .rj-inp:focus { border-color: #ef4444; }
+        .rj-send { width: 100%; background: #dc2626; color: white; padding: 14px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: inherit; }
+        .rj-send:hover { background: #b91c1c; }
+        
+        /* MESSAGE MODAL STYLES */
+        .msg-modal-box { max-width: 500px; }
+        .msg-textarea {
+            width: 100%; padding: 16px; border: 1px solid #cbd5e1; border-radius: 14px;
+            font-family: var(--font-main); font-size: 0.95rem; outline: none; resize: vertical;
+            background: #f8fafc; transition: 0.2s; margin-bottom: 20px;
+        }
+        .msg-textarea:focus { border-color: var(--accent-gold); background: #fff; }
+        .msg-send-btn {
+            width: 100%; background: var(--primary-dark); color: var(--accent-gold);
+            padding: 14px; border: none; border-radius: 50px; font-weight: 700; cursor: pointer;
+            font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: 0.2s;
+        }
+        .msg-send-btn:hover { background: #000; transform: translateY(-2px); }
+
+        #toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: var(--primary-dark); color: var(--accent-gold); padding: 14px 28px; border-radius: 50px; font-weight: 600; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 3000; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid var(--accent-gold); white-space: nowrap; }
+        #toast.show { opacity: 1; bottom: 50px; }
+        
+        #page-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        .spinner { width: 45px; height: 45px; border: 4px solid #e2e8f0; border-top: 4px solid var(--accent-gold); border-radius: 50%; animation: spin 1s linear infinite; }
+        
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        @media(max-width: 600px) { .data-row { grid-template-columns: 1fr; } .controls { gap: 10px; flex-direction: column; align-items: stretch; } .inp-search { min-width: 100%; } }
+    </style>
+</head>
+<body>
+
+    <div id="page-loader"><div class="spinner"></div></div>
+
+    <!-- HEADER -->
+    <header id="header">
+        <a href="admin-dashboard.html" class="logo-con">
+            <img src="assets/images/logo.png" alt="Logo">
+            <span class="logo-text">Hatua</span>
+            <span class="badge-admin">Admin</span>
+        </a>
+        
+        <!-- Hamburger Trigger -->
+        <button class="hamburger-btn" id="menuTrigger">
+            <i class="fas fa-bars"></i>
+            <div class="nav-notification-dot" id="menuBadge"></div>
+        </button>
+    </header>
+
+    <!-- NAVIGATION OVERLAY & DRAWER -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+    <aside class="side-drawer" id="sideDrawer">
+        <div class="drawer-header">
+            <div class="drawer-avatar" id="drawerAvatar">A</div>
+            <div class="drawer-user">
+                <h4 id="drawerName">Admin</h4>
+                <p>Master Admin</p>
+            </div>
+        </div>
+        
+        <!-- UPDATED NAVIGATION -->
+        <div class="drawer-links">
+            <a href="admin-dashboard.html" class="drawer-item"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="admin-users.html" class="drawer-item"><i class="fas fa-users"></i> Manage Users</a>
+            <a href="admin-apps.html" class="drawer-item active"><i class="fas fa-clipboard-list"></i> Applications</a>
+            <a href="admin-testimonials.html" class="drawer-item"><i class="fas fa-comment-alt"></i> Testimonials</a>
+            <a href="admin-post-job.html" class="drawer-item"><i class="fas fa-plus-circle"></i> Post Job</a>
+            <a href="admin-manage-job.html" class="drawer-item"><i class="fas fa-briefcase"></i> Manage Jobs</a>
+            <a href="admin-support.html" class="drawer-item">
+                <i class="fas fa-headset"></i> Support
+                <span class="drawer-badge" id="drawerMsgBadge">0</span>
+            </a>
+            <a href="admin-settings.html" class="drawer-item"><i class="fas fa-cogs"></i> Master Settings</a>
+            <a href="admin-logs.html" class="drawer-item"><i class="fas fa-list-alt"></i> Logs</a>
+            <a href="admin-reports.html" class="drawer-item"><i class="fas fa-chart-line"></i> Analytics</a>
+            <a href="admin-profile.html" class="drawer-item"><i class="fas fa-user-circle"></i> Profile</a>
+        </div>
+
+        <div class="drawer-footer">
+            <button id="logoutBtn" class="drawer-logout">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Applications</h1>
+                <p style="color:#64748b; font-size:1rem;">Review candidates and verify payments.</p>
+            </div>
+            <button class="btn-pdf" onclick="generateReport()"><i class="fas fa-file-pdf"></i> Report</button>
+        </div>
+
+        <div class="controls">
+            <input type="text" id="inpSearch" class="inp-search" placeholder="Search applicant, job, code...">
+            <select id="selFilter" class="sel-filter">
+                <option value="All">All Statuses</option>
+                <option value="Received">Received</option>
+                <option value="Under Review">Under Review</option>
+                <option value="Verified">Verified</option>
+                <option value="Shortlisted">Shortlisted</option>
+                <option value="Hired">Hired</option>
+                <option value="Rejected">Rejected</option>
+            </select>
+        </div>
+
+        <div id="gridApps" class="apps-grid">
+            <div style="grid-column:1/-1; text-align:center; padding:60px; color:#94a3b8;">
+                <div class="spinner" style="margin:0 auto 15px; width:30px; height:30px; border-width:3px;"></div>
+                Loading applications...
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW & MANAGE MODAL -->
+    <div id="detailModal" class="modal-bg">
+        <div class="modal-main">
+            <div class="m-head">
+                <div class="m-title">Application Details</div>
+                <button class="m-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="m-body">
+                <div class="info-sec">
+                    <div class="sec-lbl"><i class="fas fa-user-circle"></i> Candidate Info</div>
+                    <div class="data-row">
+                        <!-- Full Details captured from Apply Page -->
+                        <div class="d-itm"><label>Full Name</label><p id="vName">...</p></div>
+                        <div class="d-itm"><label>Email</label><p id="vEmail">...</p></div>
+                        
+                        <div class="d-itm"><label>Phone</label><p id="vPhone">...</p></div>
+                        <div class="d-itm"><label>Location</label><p id="vLoc">...</p></div>
+                        
+                        <div class="d-itm"><label>Age</label><p id="vAge">...</p></div>
+                        <div class="d-itm"><label>Education</label><p id="vEdu">...</p></div>
+
+                        <div class="d-itm"><label>Experience</label><p id="vExp">...</p></div>
+                        <div class="d-itm" style="grid-column:1/-1"><label>Cover Letter</label><p id="vCover" style="background:#f8fafc; padding:15px; border-radius:12px; font-weight:400; font-size:0.95rem; line-height:1.6; border:1px solid #e2e8f0; color:#475569;">...</p></div>
+                    </div>
+                </div>
+
+                <div class="info-sec">
+                    <div class="sec-lbl"><i class="fas fa-briefcase"></i> Job & Status</div>
+                    <div class="data-row">
+                        <div class="d-itm"><label>Job Title</label><p id="vJob">Frontend Dev</p></div>
+                        <div class="d-itm"><label>Company</label><p id="vComp">Tech Inc</p></div>
+                        <div class="d-itm"><label>M-Pesa Code</label><p id="vCode" style="color:var(--accent-gold); font-family:monospace; background:#1A1A1A; padding:4px 10px; border-radius:6px; width:fit-content;">MPESA123</p></div>
+                        <div class="d-itm"><label>Current Status</label><p id="vStatus">Received</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="m-actions" id="manageArea">
+                <div class="act-lbl">Workflow Actions</div>
+                <div id="workflowButtons" class="wf-container"></div>
+                
+                <button class="wf-btn btn-reject" onclick="toggleRejectBox()">
+                    <i class="fas fa-times-circle"></i> Reject Application
+                </button>
+
+                <div id="rejectBox" class="reject-box">
+                    <textarea id="rejectReason" class="rj-inp" rows="2" placeholder="Reason (e.g., Code Mismatch, Not Qualified)..."></textarea>
+                    <button class="rj-send" onclick="submitRejection()">Confirm Rejection</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW MESSAGE MODAL -->
+    <div id="messageModal" class="modal-bg">
+        <div class="modal-main msg-modal-box">
+            <div class="m-head">
+                <div class="m-title">Send Message</div>
+                <button class="m-close" onclick="closeMsgModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="m-body" style="padding: 25px;">
+                <p style="color:#64748b; margin-bottom:15px; font-size:0.9rem;">
+                    Sending to: <strong id="msgCandidateName" style="color:var(--primary-dark)">Candidate</strong>
+                </p>
+                <textarea id="msgInput" class="msg-textarea" rows="4" placeholder="Type your message to the applicant..."></textarea>
+                <button class="msg-send-btn" id="btnSendMsg" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i> Send & Go to Chat
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">Update Successful</div>
+
+    <script type="module">
+        import { auth, db } from './config.js'; 
+        import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
+        import { collection, query, orderBy, onSnapshot, doc, updateDoc, getDoc, serverTimestamp, addDoc, where, increment, getDocs } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
+
+        const { jsPDF } = window.jspdf;
+        const grid = document.getElementById('gridApps');
+        const modal = document.getElementById('detailModal');
+        const rejectBox = document.getElementById('rejectBox');
+        const wfButtons = document.getElementById('workflowButtons');
+        const loader = document.getElementById('page-loader');
+
+        // Message Modal Elements
+        const messageModal = document.getElementById('messageModal');
+        const msgCandidateName = document.getElementById('msgCandidateName');
+        const msgInput = document.getElementById('msgInput');
+        const btnSendMsg = document.getElementById('btnSendMsg');
+
+        // Drawer Elements
+        const menuTrigger = document.getElementById('menuTrigger');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const sideDrawer = document.getElementById('sideDrawer');
+        const drawerName = document.getElementById('drawerName');
+        const drawerAvatar = document.getElementById('drawerAvatar');
+        const menuBadge = document.getElementById('menuBadge');
+        const drawerMsgBadge = document.getElementById('drawerMsgBadge');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        let allApps = [];
+        let currentApp = null;
+        let currentUser = null;
+        let targetCandidate = null;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const uDoc = await getDoc(doc(db, "users", user.uid));
+                if (uDoc.exists() && (uDoc.data().role === 'admin' || uDoc.data().isAdmin)) {
+                    
+                    currentUser = user;
+                    // Profile Setup
+                    const userData = uDoc.data();
+                    drawerName.textContent = userData.fullName || "Admin";
+                    drawerAvatar.textContent = (userData.fullName || 'A').charAt(0).toUpperCase();
+
+                    checkSupportMessages();
+                    loadApps();
+                    loader.style.display = 'none';
+                } else window.location.href = "signin.html";
+            } else window.location.href = "signin.html";
+        });
+
+        function loadApps() {
+            const q = query(collection(db, "applications"), orderBy("appliedAt", "desc"));
+            onSnapshot(q, (snap) => {
+                allApps = [];
+                snap.forEach(d => allApps.push({ id: d.id, ...d.data() }));
+                renderApps();
+            });
+        }
+
+        function renderApps() {
+            const term = document.getElementById('inpSearch').value.toLowerCase();
+            const flt = document.getElementById('selFilter').value;
+            
+            const filtered = allApps.filter(a => {
+                const s = a.status || 'Received';
+                if(s === 'Rejected' && flt !== 'Rejected') return false; 
+                const matchS = (a.fullName||'').toLowerCase().includes(term) || (a.mpesaCode||'').toLowerCase().includes(term);
+                const matchF = flt === 'All' || s === flt;
+                return matchS && matchF;
+            });
+
+            grid.innerHTML = '';
+            if(filtered.length === 0) {
+                grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8; background:white; border-radius:16px; border:1px dashed #cbd5e1;">No applications found matching your filters.</div>`;
+                return;
+            }
+
+            filtered.forEach(app => {
+                const date = app.appliedAt ? new Date(app.appliedAt.seconds*1000).toLocaleDateString() : '-';
+                const s = app.status || 'Received';
+                
+                let sClass = 'st-Received';
+                if(s === 'Under Review') sClass = 'st-Review';
+                if(s === 'Verified') sClass = 'st-Verified';
+                if(s === 'Shortlisted') sClass = 'st-Shortlisted';
+                if(s === 'Hired') sClass = 'st-Hired';
+                if(s === 'Rejected') sClass = 'st-Rejected';
+
+                const card = document.createElement('div');
+                card.className = 'app-card';
+                card.innerHTML = `
+                    <div class="c-head">
+                        <div>
+                            <div class="c-name">${app.fullName}</div>
+                            <div class="c-date">${date}</div>
+                        </div>
+                    </div>
+                    <div class="c-job"><i class="fas fa-briefcase"></i> ${app.jobTitle}</div>
+                    <div class="st-badge ${sClass}">${s}</div>
+                    <div class="c-foot">
+                        <button class="btn-msg" onclick="openMsgModal('${app.userId}', '${app.fullName}')" title="Message Applicant">
+                            <i class="fas fa-envelope"></i>
+                        </button>
+                        <div style="display:flex; gap:10px;">
+                            <span class="code-txt">${app.mpesaCode}</span>
+                            <button class="btn-view" onclick="openModal('${app.id}')"><i class="fas fa-eye"></i> View</button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- MESSAGE LOGIC ---
+        window.openMsgModal = (userId, name) => {
+            if(!userId) return alert("User ID missing for this application.");
+            targetCandidate = { uid: userId, name: name };
+            msgCandidateName.textContent = name;
+            msgInput.value = '';
+            messageModal.style.display = 'flex';
+        };
+
+        window.closeMsgModal = () => {
+            messageModal.style.display = 'none';
+            targetCandidate = null;
+        };
+
+        window.sendMessage = async () => {
+            const text = msgInput.value.trim();
+            if(!text) return alert("Please type a message.");
+            if(!targetCandidate) return;
+
+            btnSendMsg.disabled = true;
+            btnSendMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+            try {
+                // 1. Check if chat exists between Admin and this User
+                // We query the 'chats' collection where participants array contains both UIDs
+                // Firestore doesn't support array-contains-all natively efficiently without specific index, 
+                // but usually participants is just [uid1, uid2]. Admin UID is currentUser.uid
+                
+                // Simplified approach: Query chats where participants array-contains the target User
+                // Then client-side filter for the one that also contains Admin (or assuming Admin is participant in all retrieved)
+                
+                const chatsRef = collection(db, "chats");
+                const q = query(chatsRef, where("participants", "array-contains", targetCandidate.uid));
+                const snap = await getDocs(q);
+                
+                let chatId = null;
+                
+                // Find existing chat with admin
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    if(data.participants.includes(currentUser.uid)) {
+                        chatId = doc.id;
+                    }
+                });
+
+                // 2. Create chat if not exists
+                if(!chatId) {
+                    const chatDoc = await addDoc(chatsRef, {
+                        participants: [currentUser.uid, targetCandidate.uid],
+                        lastMessage: text,
+                        lastSenderId: currentUser.uid,
+                        lastTimestamp: serverTimestamp(),
+                        isRead: false,
+                        unreadCount: 1
+                    });
+                    chatId = chatDoc.id;
+                } else {
+                    // Update existing chat
+                    await updateDoc(doc(db, "chats", chatId), {
+                        lastMessage: text,
+                        lastSenderId: currentUser.uid,
+                        lastTimestamp: serverTimestamp(),
+                        isRead: false,
+                        unreadCount: increment(1)
+                    });
+                }
+
+                // 3. Add Message to subcollection or messages collection
+                // Based on admin-messages logic, we use a root 'messages' collection with chatId field
+                await addDoc(collection(db, "messages"), {
+                    chatId: chatId,
+                    senderId: currentUser.uid,
+                    receiverId: targetCandidate.uid,
+                    text: text,
+                    timestamp: serverTimestamp(),
+                    read: false
+                });
+
+                // 4. Redirect
+                showToast("Message Sent!");
+                setTimeout(() => {
+                    window.location.href = "admin-messages.html";
+                }, 1000);
+
+            } catch(e) {
+                console.error("Msg Error", e);
+                alert("Failed to send message. See console.");
+                btnSendMsg.disabled = false;
+                btnSendMsg.innerHTML = '<i class="fas fa-paper-plane"></i> Send & Go to Chat';
+            }
+        };
+
+        // --- VIEW APPLICATION LOGIC ---
+        window.openModal = (id) => {
+            currentApp = allApps.find(a => a.id === id);
+            if(!currentApp) return;
+
+            // Populate Main Fields
+            document.getElementById('vName').textContent = currentApp.fullName;
+            document.getElementById('vEmail').textContent = currentApp.email;
+            document.getElementById('vPhone').textContent = currentApp.phone;
+            
+            // Populate New Fields (Location, Age, Education)
+            document.getElementById('vLoc').textContent = currentApp.location || 'N/A';
+            document.getElementById('vAge').textContent = currentApp.age || 'N/A';
+            document.getElementById('vEdu').textContent = currentApp.education || 'N/A';
+            
+            document.getElementById('vExp').textContent = currentApp.experience || 'N/A';
+            document.getElementById('vCover').textContent = currentApp.coverLetter || 'N/A';
+            document.getElementById('vJob').textContent = currentApp.jobTitle;
+            document.getElementById('vComp').textContent = currentApp.companyName || 'N/A';
+            document.getElementById('vCode').textContent = currentApp.mpesaCode;
+            document.getElementById('vStatus').textContent = currentApp.status || 'Received';
+
+            rejectBox.classList.remove('show');
+            document.getElementById('rejectReason').value = '';
+
+            const status = currentApp.status || 'Received';
+            wfButtons.innerHTML = '';
+
+            if (status === 'Received') {
+                wfButtons.innerHTML = `<button class="wf-btn btn-start-review" onclick="changeStatus('Under Review')"><i class="fas fa-search"></i> Start Review (Move to Under Review)</button>`;
+            } else if (status === 'Under Review') {
+                wfButtons.innerHTML = `<button class="wf-btn btn-verify" onclick="changeStatus('Verified')"><i class="fas fa-check-circle"></i> Verify Payment (Move to Verified)</button>`;
+            } else if (status === 'Verified') {
+                wfButtons.innerHTML = `<button class="wf-btn btn-shortlist" onclick="changeStatus('Shortlisted')"><i class="fas fa-star"></i> Shortlist Candidate</button>`;
+            } else if (status === 'Shortlisted') {
+                wfButtons.innerHTML = `<button class="wf-btn btn-hire" onclick="changeStatus('Hired')"><i class="fas fa-handshake"></i> Hire Candidate</button>`;
+            } else if (status === 'Hired') {
+                wfButtons.innerHTML = `<div style="text-align:center;color:var(--accent-gold);font-weight:700;padding:10px;background:#1A1A1A;border-radius:12px;">Candidate Hired</div>`;
+            } else if (status === 'Rejected') {
+                wfButtons.innerHTML = `<div style="text-align:center;color:#991b1b;font-weight:700;padding:10px;">Application Rejected</div>`;
+            }
+
+            modal.style.display = 'flex';
+        };
+
+        window.closeModal = () => modal.style.display = 'none';
+
+        window.changeStatus = async (newStatus) => {
+            if(!confirm(`Move application to: ${newStatus}?`)) return;
+            
+            let payStatus = currentApp.paymentStatus;
+            if (newStatus === 'Verified') payStatus = 'Verified';
+
+            // Custom Notification Logic
+            let notifTitle = `Status Update: ${newStatus}`;
+            let notifMsg = `Your application for ${currentApp.jobTitle} is now ${newStatus}.`;
+            let notifType = 'success';
+
+            if(newStatus === 'Under Review') {
+                notifTitle = "Application Under Review";
+                notifMsg = `We are now reviewing your application details and verifying payment for the ${currentApp.jobTitle} position.`;
+                notifType = 'info';
+            } else if (newStatus === 'Verified') {
+                notifTitle = "Payment Verified";
+                notifMsg = `Good news! Your payment has been verified. Your application for ${currentApp.jobTitle} is valid and processing.`;
+                notifType = 'success';
+                
+                // Increment applicants count in jobs collection only when verified
+                try {
+                    const jobRef = doc(db, "jobs", currentApp.jobId);
+                    await updateDoc(jobRef, {
+                        applicantsCount: increment(1)
+                    });
+                } catch (e) { console.error("Could not update job count", e); }
+            } else if (newStatus === 'Shortlisted') {
+                notifTitle = "You are Shortlisted!";
+                notifMsg = `Congratulations! You have been shortlisted for the ${currentApp.jobTitle} position.`;
+                notifType = 'warning';
+            } else if (newStatus === 'Hired') {
+                notifTitle = "You are Hired!";
+                notifMsg = `Congratulations! You have been selected for the ${currentApp.jobTitle} position. HR will contact you shortly.`;
+                notifType = 'success';
+            }
+
+            try {
+                await updateDoc(doc(db, "applications", currentApp.id), {
+                    status: newStatus,
+                    paymentStatus: payStatus,
+                    viewedByAdmin: true
+                });
+
+                await addDoc(collection(db, "notifications"), {
+                    userId: currentApp.userId,
+                    title: notifTitle,
+                    message: notifMsg,
+                    read: false,
+                    type: notifType,
+                    createdAt: serverTimestamp()
+                });
+
+                showToast(`Updated to ${newStatus}`);
+                closeModal();
+            } catch(e) { console.error(e); alert("Update Failed"); }
+        };
+
+        window.toggleRejectBox = () => rejectBox.classList.toggle('show');
+
+        window.submitRejection = async () => {
+            const reason = document.getElementById('rejectReason').value.trim();
+            if(!reason) return alert("Please enter a reason.");
+
+            if(!confirm("Are you sure you want to reject this candidate?")) return;
+
+            try {
+                await updateDoc(doc(db, "applications", currentApp.id), {
+                    status: 'Rejected',
+                    paymentStatus: 'Rejected',
+                    rejectReason: reason,
+                    viewedByAdmin: true
+                });
+
+                await addDoc(collection(db, "notifications"), {
+                    userId: currentApp.userId,
+                    title: "Application Rejected",
+                    message: `We regret to inform you that your application for ${currentApp.jobTitle} was not successful. Reason: ${reason}`,
+                    read: false,
+                    type: 'error',
+                    createdAt: serverTimestamp()
+                });
+
+                showToast("Application Rejected");
+                closeModal();
+            } catch(e) { console.error(e); alert("Rejection Failed"); }
+        };
+
+        window.generateReport = () => {
+            if(allApps.length === 0) return alert("No data");
+            const doc = new jsPDF();
+            
+            // Header
+            doc.setFillColor(26, 26, 26); // Charcoal
+            doc.rect(0, 0, 210, 30, 'F');
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.setTextColor(212, 175, 55); // Gold
+            doc.text("Applications Report", 14, 20);
+
+            const rows = allApps.map(a => [a.fullName, a.jobTitle, a.mpesaCode, a.status || 'Received']);
+            
+            doc.autoTable({ 
+                head: [['Name', 'Job', 'Code', 'Status']], 
+                body: rows, 
+                startY: 35,
+                theme: 'striped',
+                headStyles: { fillColor: [26, 26, 26], textColor: [255,255,255] },
+            });
+            doc.save('Applications_Report.pdf');
+        };
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(()=>t.classList.remove('show'), 3000);
+        }
+
+        document.getElementById('inpSearch').addEventListener('input', renderApps);
+        document.getElementById('selFilter').addEventListener('change', renderApps);
+
+        // --- CHECK MESSAGES (For Badge) ---
+        function checkSupportMessages() {
+            const q = query(collection(db, "support_tickets"), where("hasUnreadAdmin", "==", true));
+            onSnapshot(q, (snap) => {
+                const count = snap.docs.filter(d => d.data().status !== 'resolved').length;
+                if(count > 0) {
+                    menuBadge.classList.add('show');
+                    drawerMsgBadge.textContent = count > 9 ? '9+' : count;
+                    drawerMsgBadge.classList.add('show');
+                } else {
+                    menuBadge.classList.remove('show');
+                    drawerMsgBadge.classList.remove('show');
+                }
+            });
+        }
+
+        // --- DRAWER LOGIC ---
+        function toggleDrawer() {
+            sideDrawer.classList.toggle('active');
+            menuOverlay.classList.toggle('active');
+        }
+
+        function closeDrawer() {
+            sideDrawer.classList.remove('active');
+            menuOverlay.classList.remove('active');
+        }
+
+        menuTrigger.addEventListener('click', toggleDrawer);
+        menuOverlay.addEventListener('click', closeDrawer);
+        
+        sideDrawer.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', closeDrawer);
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            await signOut(auth);
+            window.location.href = "signin.html";
+        });
+    </script>
+</body>
+</html>

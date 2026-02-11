@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Dashboard | Hatua Recruitment</title>
+    <meta name="description" content="Your professional career command center.">
+    <meta name="theme-color" content="#1A1A1A">
+
+    <!-- PWA Manifest & Meta -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/images/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/images/icon-192.png">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Google Fonts (Added Inter for Variable Weight Animations) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* DYNAMIC VARIABLES (Hatua Branding) */
+            --primary-dark: #1A1A1A; /* Charcoal */
+            --primary-light: #2C2C2C;
+            --accent-main: #D4AF37; /* Gold */
+            --accent-glow: rgba(212, 175, 55, 0.4);
+            --accent-light: #FFFBEB; /* Very light gold/yellow tint */
+            
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #F8FAFC;
+            --surface-white: #ffffff;
+            --success-green: #059669;
+            
+            --shadow-subtle: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-elevated: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * {margin:0;padding:0;box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-main);
+            background: url('assets/images/background.png') repeat, var(--bg-body);
+            background-size: 300px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* ---- SKELETON LOADING ---- */
+        .skeleton {
+            background: #e2e8f0;
+            background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+            color: transparent !important;
+        }
+        @keyframes shimmer { 0% {background-position: -200% 0;} 100% {background-position: 200% 0;} }
+
+        /* ---- HEADER ---- */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            padding: 15px 5%; position: fixed; top: 0; left: 0; right: 0;
+            z-index: 1000; box-shadow: var(--shadow-subtle); border-bottom: 1px solid rgba(0,0,0,0.03);
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        header.hidden { transform: translateY(-100%); }
+        
+        .logo-container { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-container img { height: 40px; width: auto; }
+        .logo-text { font-size: 1.4rem; font-weight: 700; color: var(--primary-dark); font-family: 'Playfair Display', serif; }
+
+        /* ---- HAMBURGER MENU STYLES ---- */
+        .hamburger-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(26, 26, 26, 0.05); color: var(--primary-dark);
+            border: none; cursor: pointer; display: grid; place-items: center;
+            font-size: 1.2rem; transition: var(--transition);
+            position: relative; z-index: 1002;
+        }
+        .hamburger-btn:hover { background: rgba(212, 175, 55, 0.1); color: var(--accent-main); transform: rotate(90deg); }
+        
+        /* Notification Dot on Hamburger */
+        .nav-notification-dot {
+            position: absolute; top: 8px; right: 8px;
+            width: 10px; height: 10px; background: #ef4444;
+            border-radius: 50%; border: 2px solid #fff;
+            opacity: 0; transition: 0.3s; pointer-events: none;
+        }
+        .nav-notification-dot.show { opacity: 1; }
+
+        /* Menu Overlay */
+        .menu-overlay {
+            position: fixed; inset: 0; background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            z-index: 2000; opacity: 0; pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .menu-overlay.active { opacity: 1; pointer-events: all; }
+
+        /* Side Drawer */
+        .side-drawer {
+            position: fixed; top: 0; right: 0; bottom: 0;
+            width: 80%; max-width: 320px;
+            background: #fff;
+            z-index: 2001;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column;
+            padding: 30px 0;
+            border-left: 4px solid var(--accent-main);
+        }
+        .side-drawer.active { transform: translateX(0); }
+
+        .drawer-header {
+            padding: 0 25px 25px; border-bottom: 1px solid #f1f5f9;
+            display: flex; align-items: center; gap: 15px;
+        }
+        .drawer-avatar {
+            width: 50px; height: 50px; background: var(--primary-dark);
+            color: var(--accent-main); border-radius: 50%; display: grid; place-items: center;
+            font-size: 1.2rem; font-weight: 700; border: 2px solid var(--accent-main);
+        }
+        .drawer-user h4 { font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 2px; }
+        .drawer-user p { font-size: 0.85rem; color: var(--text-muted); }
+
+        .drawer-links {
+            padding: 20px 15px; flex: 1; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 5px;
+        }
+        .drawer-item {
+            padding: 12px 20px; border-radius: 12px;
+            text-decoration: none; color: var(--text-main);
+            font-weight: 600; display: flex; align-items: center; gap: 15px;
+            transition: 0.2s;
+        }
+        .drawer-item i { width: 24px; text-align: center; color: var(--text-muted); transition: 0.2s; }
+        .drawer-item:hover, .drawer-item.active { background: #FFFBEB; color: var(--primary-dark); }
+        .drawer-item:hover i, .drawer-item.active i { color: var(--accent-main); }
+        
+        .drawer-badge {
+            margin-left: auto; background: #ef4444; color: #fff;
+            font-size: 0.75rem; padding: 2px 8px; border-radius: 10px;
+            opacity: 0;
+        }
+        .drawer-badge.show { opacity: 1; }
+
+        .drawer-footer {
+            padding: 20px 25px 0; border-top: 1px solid #f1f5f9;
+        }
+        .drawer-logout {
+            width: 100%; padding: 12px; background: #fef2f2;
+            color: #ef4444; border: none; border-radius: 12px;
+            font-weight: 700; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; gap: 10px;
+            transition: 0.2s; font-family: var(--font-main);
+        }
+        .drawer-logout:hover { background: #fee2e2; }
+
+        /* ---- DASHBOARD CONTENT ---- */
+        .dashboard-container {
+            margin-top: 85px; padding: 20px 5%; max-width: 1200px;
+            margin-left: auto; margin-right: auto; width: 100%;
+        }
+
+        /* =========================================================================
+           ADVANCED HERO ANIMATIONS START 
+           ========================================================================= */
+        
+        /* 1. Living Mesh Gradient Background */
+        .hero-widget {
+            /* Fallback */
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.08);
+            transform-style: preserve-3d;
+        }
+
+        /* The animated orbs */
+        .mesh-orb-1, .mesh-orb-2, .mesh-orb-3 {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+            z-index: 0;
+        }
+        .mesh-orb-1 { width: 400px; height: 400px; background: #1e3a8a; top: -100px; left: -100px; animation: orbit1 15s infinite linear; }
+        .mesh-orb-2 { width: 300px; height: 300px; background: #7c3aed; bottom: -50px; right: -50px; animation: orbit2 20s infinite ease-in-out; }
+        .mesh-orb-3 { width: 200px; height: 200px; background: var(--accent-main); top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.3; animation: pulseOrb 8s infinite ease-in-out; }
+
+        @keyframes orbit1 { 0% { transform: translate(0, 0) rotate(0deg); } 50% { transform: translate(50px, 100px) rotate(180deg); } 100% { transform: translate(0, 0) rotate(360deg); } }
+        @keyframes orbit2 { 0% { transform: translate(0, 0); } 50% { transform: translate(-60px, -40px); } 100% { transform: translate(0, 0); } }
+        @keyframes pulseOrb { 0%, 100% { opacity: 0.2; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 0.4; transform: translate(-50%, -50%) scale(1.2); } }
+
+        /* 10. Atmospheric Particle Float */
+        #heroCanvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1; pointer-events: none; opacity: 0.4;
+        }
+
+        /* 8. Interactive "Spotlight" Gradient Overlay */
+        .hero-spotlight {
+            position: absolute; inset: 0; z-index: 1;
+            background: radial-gradient(600px circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.1), transparent 40%);
+            mix-blend-mode: overlay; pointer-events: none;
+        }
+
+        .hero-content { z-index: 2; flex: 1; position: relative; }
+        
+        /* 4. Staggered Text Reveal with Variable Font Weight */
+        .reveal-text {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(20px);
+            font-family: 'Inter', sans-serif; 
+            font-variation-settings: "wght" 100;
+        }
+        .reveal-active {
+            animation: textLand 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        @keyframes textLand {
+            0% { opacity: 0; transform: translateY(20px); font-variation-settings: "wght" 100; }
+            100% { opacity: 1; transform: translateY(0); font-variation-settings: "wght" 700; }
+        }
+
+        .hero-title { 
+            font-family: 'Playfair Display', serif; font-size: 2rem; 
+            margin-bottom: 8px; color: #fff; line-height: 1.2;
+        }
+        .hero-subtitle { 
+            opacity: 0.9; font-size: 0.95rem; margin-bottom: 25px; 
+            max-width: 450px; line-height: 1.6; font-weight: 300;
+            animation: fadeIn 1s ease-out 0.3s backwards;
+        }
+
+        /* 2. Rolling Data Counters with Motion Blur */
+        .hero-stats-row { display: flex; gap: 40px; animation: slideUp 0.8s ease-out 0.4s backwards; }
+        .hero-stat { display: flex; flex-direction: column; }
+        .hero-stat .num { 
+            font-size: 1.8rem; font-weight: 800; color: var(--accent-main); 
+            line-height: 1; margin-bottom: 4px; font-variant-numeric: tabular-nums;
+        }
+        .hero-stat .num.blur-active { filter: blur(0px 2px); opacity: 0.8; }
+        
+        /* 7. Scramble Text Decryption Effect */
+        .hero-stat .label { 
+            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; 
+            opacity: 0.7; font-weight: 600; font-family: monospace;
+        }
+
+        /* 5. Glassmorphism "Profile" Container 2.0 */
+        .profile-complete-widget {
+            background: rgba(255, 255, 255, 0.03); 
+            backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%);
+            padding: 24px; border-radius: 20px; 
+            min-width: 240px; text-align: left; display: flex; flex-direction: column;
+            z-index: 2; 
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative; overflow: hidden;
+            /* Fallback border */
+            border: 1px solid rgba(255,255,255,0.15); border-top-color: rgba(255,255,255,0.3);
+            animation: slideUp 0.8s ease-out 0.5s backwards;
+        }
+        
+        /* Noise texture overlay */
+        .profile-complete-widget::before {
+            content: ""; position: absolute; inset: 0; 
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            opacity: 0.4; pointer-events: none; mix-blend-mode: overlay;
+        }
+
+        .progress-label { font-size: 0.8rem; margin-bottom: 12px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+        
+        /* 3. Liquid Progress Bar */
+        .progress-track { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-bottom: 16px; position: relative; }
+        .progress-fill { 
+            height: 100%; background: var(--accent-main); width: 0%; border-radius: 10px; 
+            position: relative;
+            /* Cubic bezier for liquid spring feel */
+            transition: width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+        /* Leading edge particle glow */
+        .progress-fill::after {
+            content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 4px;
+            background: #fff; box-shadow: 0 0 8px #fff; border-radius: 0 10px 10px 0;
+        }
+        /* Shimmer overlay */
+        .progress-fill::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transform: skewX(-20deg) translateX(-150%);
+            animation: shimmerBar 3s infinite;
+        }
+        @keyframes shimmerBar { 100% { transform: skewX(-20deg) translateX(200%); } }
+
+        /* 6. Magnetic Button Micro-interaction */
+        .magnetic-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: white; font-size: 0.8rem; font-weight: 600; text-decoration: none;
+            padding: 8px 16px; border-radius: 30px;
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.1s linear; /* JS handles the spring */
+        }
+        .magnetic-btn:hover { background: rgba(255,255,255,0.2); }
+        .magnetic-btn span { display: inline-block; transition: transform 0.1s linear; }
+
+        /* =========================================================================
+           ADVANCED HERO ANIMATIONS END 
+           ========================================================================= */
+
+
+        /* ---- FULL QUICK ACTIONS GRID ---- */
+        .actions-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; animation: fadeIn 0.8s ease-out; }
+        .actions-title { font-size: 1.1rem; font-weight: 700; color: var(--primary-dark); }
+        
+        .advanced-actions-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 40px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .quick-btn {
+            background: var(--surface-white);
+            border-radius: 20px;
+            padding: 20px 10px;
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            text-decoration: none; color: var(--text-main);
+            transition: var(--transition);
+            border: 1px solid rgba(0,0,0,0.04);
+            box-shadow: var(--shadow-subtle);
+            position: relative; overflow: hidden;
+        }
+
+        .quick-btn::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: var(--accent-main); opacity: 0; transition: 0.3s;
+        }
+
+        .quick-btn:hover { transform: translateY(-5px); box-shadow: 0 12px 25px -5px rgba(0,0,0,0.08); }
+        .quick-btn:hover::before { opacity: 1; }
+
+        .btn-icon-wrapper {
+            width: 50px; height: 50px; border-radius: 16px;
+            background: var(--bg-body); display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; color: var(--text-muted); transition: 0.3s;
+        }
+        
+        .quick-btn:hover .btn-icon-wrapper {
+            background: var(--primary-dark); color: var(--accent-main); transform: scale(1.1) rotate(5deg);
+        }
+        
+        /* Specific Icon Colors (All conform to brand on hover) */
+        .quick-btn.gold:hover .btn-icon-wrapper { background: var(--accent-main); color: #fff; }
+
+        .btn-label { font-size: 0.8rem; font-weight: 700; text-align: center; }
+
+        /* ---- TESTIMONIALS ---- */
+        #testimonialsSection { display: none; margin-bottom: 30px; animation: fadeIn 1.2s ease-out; }
+        .testimonials-wrapper {
+            margin-bottom: 40px; overflow: hidden; position: relative;
+        }
+        .testimonials-wrapper::before, .testimonials-wrapper::after {
+            content: ""; position: absolute; top: 0; width: 80px; height: 100%; z-index: 2;
+            pointer-events: none;
+        }
+        .testimonials-wrapper::before { left: 0; background: linear-gradient(to right, var(--bg-body), transparent); }
+        .testimonials-wrapper::after { right: 0; background: linear-gradient(to left, var(--bg-body), transparent); }
+
+        .testimonial-track {
+            display: flex; gap: 20px; width: max-content;
+            animation: scrollLeft 40s linear infinite;
+        }
+        .testimonial-track:hover { animation-play-state: paused; }
+        @keyframes scrollLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+        .t-card {
+            background: var(--surface-white); border-radius: 20px; padding: 20px;
+            width: 320px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column;
+            gap: 12px; user-select: none; border-left: 3px solid var(--accent-main);
+        }
+        .t-header { display: flex; align-items: center; gap: 12px; }
+        .t-avatar { 
+            width: 42px; height: 42px; background: var(--primary-dark); border-radius: 12px; 
+            color: var(--accent-main); display: flex; align-items: center; justify-content: center; font-weight: 700;
+        }
+        .t-info h4 { font-size: 0.95rem; color: var(--primary-dark); font-weight: 700; margin-bottom: 2px; }
+        .t-info span { font-size: 0.75rem; color: var(--text-muted); display: block; }
+        .t-body { font-size: 0.9rem; color: #475569; line-height: 1.5; font-style: italic; }
+
+        /* ---- ADVANCED 3D JOB CARDS ---- */
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; margin-top: 10px; animation: fadeIn 1.2s ease-out; }
+        .section-title { font-size: 1.35rem; font-weight: 800; color: var(--primary-dark); letter-spacing: -0.5px; }
+        .view-all { font-size: 0.9rem; color: var(--primary-dark); text-decoration: none; font-weight: 700; transition:0.2s; border-bottom: 2px solid var(--accent-main); }
+        .view-all:hover { color: var(--accent-main); border-color: var(--primary-dark); }
+
+        .jobs-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px; margin-bottom: 45px; animation: fadeIn 1.4s ease-out;
+        }
+
+        .job-card {
+            background: var(--surface-white);
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(0,0,0,0.06);
+            display: flex; flex-direction: column;
+            /* 3D Depth */
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.05);
+            border-bottom: 4px solid #e2e8f0;
+            transform-style: preserve-3d;
+        }
+
+        .job-card:hover {
+            transform: translateY(-8px) scale(1.01);
+            box-shadow: 0 20px 40px -5px rgba(0,0,0,0.1), 0 0 0 1px rgba(212, 175, 55, 0.1);
+            border-bottom-color: var(--accent-main);
+            z-index: 10;
+        }
+
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        
+        .company-logo {
+            width: 52px; height: 52px; background: linear-gradient(135deg, #1A1A1A, #333);
+            border-radius: 14px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; color: var(--accent-main); font-weight: 700;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border: 1px solid #444;
+        }
+
+        .bookmark-btn {
+            background: transparent; border: none; cursor: pointer;
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; color: #cbd5e1; transition: 0.3s;
+        }
+        .bookmark-btn:hover { background: #f1f5f9; color: var(--accent-main); transform: scale(1.1); }
+        .bookmark-btn.saved { color: var(--accent-main); }
+        .bookmark-btn.saved i { font-weight: 900; filter: drop-shadow(0 2px 4px var(--accent-glow)); }
+
+        .job-title { font-size: 1.25rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 6px; line-height: 1.3; margin-top: 12px; }
+        .company-name { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 18px; display: flex; align-items: center; gap: 6px; font-weight: 500; }
+
+        .job-details-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 25px; }
+        .detail-pill { 
+            font-size: 0.75rem; padding: 6px 12px; background: #f8fafc; border: 1px solid #e2e8f0;
+            border-radius: 10px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; font-weight: 600;
+            transition: 0.2s;
+        }
+        .job-card:hover .detail-pill { background: white; border-color: #cbd5e1; }
+
+        .time-badge {
+            font-size: 0.75rem; color: var(--primary-dark); background: var(--accent-light);
+            padding: 6px 12px; border-radius: 20px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;
+            margin-top: auto; margin-bottom: 18px; width: fit-content; border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .card-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .btn-view {
+            text-decoration: none; padding: 12px; border-radius: 12px; text-align: center;
+            background: #fff; border: 1px solid #e2e8f0; color: var(--text-main); font-weight: 700; font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        .btn-view:hover { background: #f8fafc; border-color: var(--accent-main); color: var(--primary-dark); }
+        .btn-apply {
+            text-decoration: none; padding: 12px; border-radius: 12px; text-align: center;
+            background: var(--primary-dark); color: white; border: none; font-weight: 700; font-size: 0.9rem;
+            transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .btn-apply:hover { background: var(--accent-main); color: #fff; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(212, 175, 55, 0.4); }
+        .btn-disabled { background: #cbd5e1; color: #64748b; cursor: not-allowed; pointer-events: none; box-shadow: none; }
+
+        /* Toast */
+        #toast {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: var(--primary-dark); color: var(--accent-main); padding: 12px 24px; border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); font-size: 0.9rem; font-weight: 600;
+            opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2000;
+            display: flex; align-items: center; gap: 10px; border: 1px solid #333;
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* Recent Table */
+        .recent-section { 
+            background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); 
+            border-radius: 20px; padding: 25px; box-shadow: var(--shadow-subtle); 
+            border: 1px solid rgba(255,255,255,0.5); margin-bottom: 40px; 
+            animation: fadeIn 1.6s ease-out;
+        }
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th { text-align: left; padding: 12px 15px; color: var(--text-muted); font-weight: 700; font-size: 0.8rem; border-bottom: 2px solid #f1f5f9; text-transform: uppercase; }
+        td { padding: 14px 15px; color: var(--text-main); font-size: 0.9rem; border-bottom: 1px solid #f8fafc; vertical-align: middle; font-weight: 500; }
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; display: inline-block; }
+        .status-success { background: #ECFDF5; color: #059669; }
+        .status-warning { background: #FFFBEB; color: #D97706; }
+        .status-danger { background: #FEF2F2; color: #DC2626; }
+        .status-neutral { background: #F3F4F6; color: #6B7280; }
+
+        /* Footer */
+        .main-footer {
+            margin-top: 60px; padding: 40px 0 20px 0; border-top: 1px solid #e2e8f0;
+            background: linear-gradient(to bottom, transparent, #fff);
+        }
+        .footer-content { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 20px; }
+        .footer-brand { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--primary-dark); }
+        .footer-socials { display: flex; gap: 15px; margin-bottom: 10px; }
+        .social-icon {
+            width: 40px; height: 40px; border-radius: 50%; background: #f1f5f9;
+            color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+            text-decoration: none; transition: var(--transition); font-size: 1.1rem;
+        }
+        .social-icon:hover { background: var(--primary-dark); color: var(--accent-main); transform: translateY(-3px); }
+        .footer-links { display: flex; gap: 20px; font-size: 0.85rem; flex-wrap: wrap; justify-content: center; }
+        .footer-link { text-decoration: none; color: var(--text-muted); font-weight: 500; transition: 0.2s; }
+        .footer-link:hover { color: var(--accent-main); }
+        .footer-bottom { margin-top: 25px; font-size: 0.8rem; color: #94a3b8; text-align: center; }
+
+        /* ---- FLOATING SUPPORT BUTTON ---- */
+        .floating-support-btn {
+            position: fixed; bottom: 30px; right: 20px; width: 56px; height: 56px;
+            background: var(--primary-dark); color: var(--accent-main); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3); z-index: 990;
+            text-decoration: none; transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            border: 2px solid var(--accent-main);
+        }
+        .floating-support-btn.hidden { transform: translateY(200%); }
+        .floating-support-btn:hover { transform: scale(1.1) rotate(10deg); background: #000; color: #fff; }
+        .support-badge {
+            position: absolute; top: -2px; right: -2px;
+            background: #ef4444; color: white; font-size: 0.7rem; font-weight: 800;
+            width: 22px; height: 22px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid #fff; opacity: 0; transform: scale(0);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .support-badge.show { opacity: 1; transform: scale(1); animation: bounceIn 0.5s; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes bounceIn { 0%{transform:scale(0);} 50%{transform:scale(1.2);} 100%{transform:scale(1);} }
+
+        /* Loader & Empty States */
+        #page-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        .spinner { width: 50px; height: 50px; border: 4px solid #e2e8f0; border-top: 4px solid var(--accent-main); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .empty-state { text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.9rem; }
+        
+        @media (max-width: 600px) {
+            .jobs-grid { grid-template-columns: 1fr; }
+            .hero-widget { flex-direction: column; align-items: flex-start; gap: 20px; }
+            /* Hide large Canvas on mobile for performance, keep orbs */
+            #heroCanvas { display: none; }
+            .hero-bg-graphic { top: -20%; right: -20%; }
+            .advanced-actions-grid { grid-template-columns: repeat(4, 1fr); } 
+            @media (max-width: 450px) { .advanced-actions-grid { grid-template-columns: repeat(2, 1fr); } }
+
+            .profile-complete-widget { width: 100%; text-align: left; align-items: flex-start; margin-top: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PAGE LOADER -->
+    <div id="page-loader"><div class="spinner"></div></div>
+
+    <!-- HEADER -->
+    <header id="header">
+        <a href="dashboard.html" class="logo-container">
+            <img src="assets/images/logo.png" alt="Logo">
+            <span class="logo-text" id="headerAppName">Hatua Recruitment</span>
+        </a>
+        
+        <!-- Hamburger Trigger -->
+        <button class="hamburger-btn" id="menuTrigger">
+            <i class="fas fa-bars"></i>
+            <div class="nav-notification-dot" id="menuBadge"></div>
+        </button>
+    </header>
+
+    <!-- NAVIGATION OVERLAY & DRAWER -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+    <aside class="side-drawer" id="sideDrawer">
+        <div class="drawer-header">
+            <div class="drawer-avatar" id="drawerAvatar">M</div>
+            <div class="drawer-user">
+                <h4 id="drawerName">Member</h4>
+                <p>Hatua Member</p>
+            </div>
+        </div>
+        
+        <div class="drawer-links">
+            <a href="dashboard.html" class="drawer-item active"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="jobs.html" class="drawer-item"><i class="fas fa-briefcase"></i> Browse Jobs</a>
+            <a href="notifications.html" class="drawer-item">
+                <i class="fas fa-bell"></i> Notifications
+                <span class="drawer-badge" id="drawerAlertBadge">0</span>
+            </a>
+            <a href="saved-jobs.html" class="drawer-item"><i class="fas fa-bookmark"></i> Saved Jobs</a>
+            <a href="applications.html" class="drawer-item"><i class="fas fa-paper-plane"></i> My Applications</a>
+            <a href="messages.html" class="drawer-item"><i class="fas fa-comment-dots"></i> Messages</a>
+            <a href="settings.html" class="drawer-item"><i class="fas fa-cog"></i> Settings</a>
+            <a href="profile.html" class="drawer-item"><i class="fas fa-user"></i> My Profile</a>
+        </div>
+
+        <div class="drawer-footer">
+            <button id="logoutBtn" class="drawer-logout">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+    </aside>
+
+    <!-- DASHBOARD CONTENT -->
+    <div class="dashboard-container">
+        
+        <!-- ADVANCED HERO SECTION (UPDATED) -->
+        <div class="hero-widget" id="heroWidget">
+            <!-- Living Mesh Gradient Orbs -->
+            <div class="mesh-orb-1"></div>
+            <div class="mesh-orb-2"></div>
+            <div class="mesh-orb-3"></div>
+            
+            <!-- Canvas for Particles (Desktop) -->
+            <canvas id="heroCanvas"></canvas>
+            
+            <!-- Interactive Spotlight Overlay -->
+            <div class="hero-spotlight" id="heroSpotlight"></div>
+
+            <div class="hero-content">
+                <!-- Staggered Text -->
+                <h1 class="hero-title">
+                    <span class="reveal-text" id="revealHello">Hello, </span> 
+                    <span id="userName" class="skeleton reveal-text" style="display:inline-block; min-width:80px; border-radius:4px;">...</span>
+                </h1>
+                <p class="hero-subtitle">You have <span style="color:var(--accent-main); font-weight:700;" id="appliedCountHero">-</span> active applications this week. Keep the momentum going!</p>
+                
+                <div class="hero-stats-row">
+                    <div class="hero-stat">
+                        <span class="num" id="savedCountHero" data-target="0">0</span>
+                        <span class="label scramble-text">Saved</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="num" id="unreadCountHero" data-target="0">0</span>
+                        <span class="label scramble-text">Alerts</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Completion Nudge (Glassmorphism 2.0) -->
+            <div class="profile-complete-widget">
+                <span class="progress-label scramble-text">Profile Strength: 70%</span>
+                <div class="progress-track">
+                    <div class="progress-fill" style="width: 0%" id="profileProgressFill"></div>
+                </div>
+                <!-- Magnetic Button -->
+                <a href="profile.html" class="magnetic-btn" id="magneticBtn">
+                    <span>Complete Profile &rarr;</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- FULL QUICK ACTIONS GRID -->
+        <div class="actions-header">
+            <h2 class="actions-title">Quick Actions</h2>
+        </div>
+        <div class="advanced-actions-grid">
+            <!-- 1. Saved Jobs -->
+            <a href="saved-jobs.html" class="quick-btn gold">
+                <div class="btn-icon-wrapper"><i class="fas fa-bookmark"></i></div>
+                <span class="btn-label">Saved</span>
+            </a>
+            <!-- 2. Applied Jobs -->
+            <a href="applications.html" class="quick-btn">
+                <div class="btn-icon-wrapper"><i class="fas fa-paper-plane"></i></div>
+                <span class="btn-label">Applied</span>
+            </a>
+            <!-- 3. Profile -->
+            <a href="profile.html" class="quick-btn gold">
+                <div class="btn-icon-wrapper"><i class="fas fa-user-edit"></i></div>
+                <span class="btn-label">Profile</span>
+            </a>
+            <!-- 4. Resume Builder/CV -->
+            <a href="resume.html" class="quick-btn">
+                <div class="btn-icon-wrapper"><i class="fas fa-file-alt"></i></div>
+                <span class="btn-label">Resume</span>
+            </a>
+            <!-- 5. Messages -->
+            <a href="messages.html" class="quick-btn">
+                <div class="btn-icon-wrapper"><i class="fas fa-comment-dots"></i></div>
+                <span class="btn-label">Messages</span>
+            </a>
+            <!-- 6. Notifications -->
+            <a href="notifications.html" class="quick-btn gold">
+                <div class="btn-icon-wrapper"><i class="fas fa-bell"></i></div>
+                <span class="btn-label">Alerts</span>
+            </a>
+            <!-- 7. Settings -->
+            <a href="settings.html" class="quick-btn">
+                <div class="btn-icon-wrapper"><i class="fas fa-cog"></i></div>
+                <span class="btn-label">Settings</span>
+            </a>
+            <!-- 8. Support -->
+            <a href="support.html" class="quick-btn">
+                <div class="btn-icon-wrapper"><i class="fas fa-headset"></i></div>
+                <span class="btn-label">Support</span>
+            </a>
+        </div>
+
+        <!-- TESTIMONIALS (Toggleable via Admin) -->
+        <div id="testimonialsSection">
+            <div class="section-header">
+                <h2 class="section-title">Success Stories</h2>
+            </div>
+            <div class="testimonials-wrapper">
+                <div class="testimonial-track" id="testimonialTrack">
+                    <!-- Dynamic Content -->
+                </div>
+            </div>
+        </div>
+
+        <!-- RECENT JOBS -->
+        <div class="section-header">
+            <h2 class="section-title">Recommended for You</h2>
+            <a href="jobs.html" class="view-all">View All</a>
+        </div>
+        <div class="jobs-grid" id="jobsContainer">
+            <!-- Loading Skeletons -->
+            <div class="job-card" style="height:250px;"><div class="skeleton" style="width:100%;height:100%;"></div></div>
+            <div class="job-card" style="height:250px;"><div class="skeleton" style="width:100%;height:100%;"></div></div>
+            <div class="job-card" style="height:250px;"><div class="skeleton" style="width:100%;height:100%;"></div></div>
+        </div>
+
+        <!-- RECENT ACTIVITY -->
+        <div class="section-header">
+            <h2 class="section-title">Recent Activity</h2>
+        </div>
+        <div class="recent-section">
+            <div class="table-responsive">
+                <table id="activityTable">
+                    <thead>
+                        <tr>
+                            <th>Job Role</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activityBody">
+                        <tr><td colspan="3" class="empty-state"><span class="skeleton" style="width:100%; height:20px; display:block;"></span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="main-footer">
+            <div class="footer-content">
+                <div class="footer-brand" id="footerBrand">Hatua Recruitment</div>
+                <div class="footer-socials" id="socialLinksContainer">
+                    <!-- Dynamic -->
+                </div>
+                <div class="footer-links">
+                    <a href="about.html" class="footer-link">About Us</a>
+                    <a href="privacy.html" class="footer-link">Privacy Policy</a>
+                    <a href="terms.html" class="footer-link">Terms of Service</a>
+                    <a href="contact.html" class="footer-link">Contact</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                &copy; <span id="copyrightYear">2026</span> <span id="copyrightName">Hatua Recruitment</span>. All rights reserved.
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast"><i class="fas fa-check-circle"></i> <span>Saved successfully</span></div>
+    
+    <!-- FLOATING SUPPORT BUTTON -->
+    <a href="support.html" class="floating-support-btn" id="floatingSupportBtn">
+        <i class="fas fa-headset"></i>
+        <div class="support-badge" id="supportBadge">0</div>
+    </a>
+
+    <!-- FIREBASE & LOGIC -->
+    <script type="module">
+        import { auth, db } from './config.js'; 
+        import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
+        import { collection, query, where, orderBy, limit, getDocs, onSnapshot, getDoc, doc, updateDoc, arrayUnion, arrayRemove } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
+
+        const pageLoader = document.getElementById('page-loader');
+        const userNameEl = document.getElementById('userName');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const jobsContainer = document.getElementById('jobsContainer');
+        const activityBody = document.getElementById('activityBody');
+        const appliedCountHero = document.getElementById('appliedCountHero');
+        const savedCountHero = document.getElementById('savedCountHero');
+        const unreadCountHero = document.getElementById('unreadCountHero');
+        const testimonialTrack = document.getElementById('testimonialTrack');
+        const socialLinksContainer = document.getElementById('socialLinksContainer');
+        const toast = document.getElementById('toast');
+        const supportBadge = document.getElementById('supportBadge');
+        const profileProgressFill = document.getElementById('profileProgressFill');
+
+        // Drawer Elements
+        const menuTrigger = document.getElementById('menuTrigger');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const sideDrawer = document.getElementById('sideDrawer');
+        const drawerName = document.getElementById('drawerName');
+        const drawerAvatar = document.getElementById('drawerAvatar');
+        const menuBadge = document.getElementById('menuBadge');
+        const drawerAlertBadge = document.getElementById('drawerAlertBadge');
+
+        // Config Elements
+        const headerAppName = document.getElementById('headerAppName');
+        const footerBrand = document.getElementById('footerBrand');
+        const copyrightName = document.getElementById('copyrightName');
+        const testimonialsSection = document.getElementById('testimonialsSection');
+
+        let currentUser = null;
+        let savedJobIds = []; 
+        let appConfig = {
+            appName: 'Hatua Recruitment',
+            branding: {},
+            testimonials: true
+        };
+
+        // --- ANIMATION UTILS ---
+
+        // 1. Scramble Text
+        function scrambleText(element, finalString) {
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            let iterations = 0;
+            const interval = setInterval(() => {
+                element.innerText = finalString
+                    .split("")
+                    .map((letter, index) => {
+                        if (index < iterations) return finalString[index];
+                        return chars[Math.floor(Math.random() * chars.length)];
+                    })
+                    .join("");
+                if (iterations >= finalString.length) clearInterval(interval);
+                iterations += 1 / 3;
+            }, 30);
+        }
+
+        // 2. Rolling Counter with Blur
+        function animateCounter(element, target) {
+            let start = 0;
+            const duration = 1500;
+            const startTime = performance.now();
+            
+            // Add blur during animation
+            element.classList.add('blur-active');
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                // Ease out cubic
+                const ease = 1 - Math.pow(1 - progress, 3);
+                
+                const currentVal = Math.floor(ease * target);
+                element.textContent = currentVal;
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    element.textContent = target; // Ensure exact final number
+                    element.classList.remove('blur-active');
+                    
+                    // Tiny overshoot for spring feel on small numbers
+                    if(target < 5 && target > 0) {
+                        element.style.transform = "scale(1.2)";
+                        setTimeout(()=> element.style.transform = "scale(1)", 200);
+                    }
+                }
+            }
+            requestAnimationFrame(update);
+        }
+
+        // 3. Magnetic Button
+        const magneticBtn = document.getElementById('magneticBtn');
+        if(magneticBtn) {
+            magneticBtn.addEventListener('mousemove', (e) => {
+                const rect = magneticBtn.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                // Move button slightly
+                magneticBtn.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
+                // Move text more (parallax)
+                magneticBtn.querySelector('span').style.transform = `translate(${x * 0.1}px, ${y * 0.1}px)`;
+            });
+            magneticBtn.addEventListener('mouseleave', () => {
+                magneticBtn.style.transform = 'translate(0, 0)';
+                magneticBtn.querySelector('span').style.transform = 'translate(0, 0)';
+            });
+        }
+
+        // 4. Spotlight Effect
+        const heroWidget = document.getElementById('heroWidget');
+        const heroSpotlight = document.getElementById('heroSpotlight');
+        if(heroWidget && heroSpotlight) {
+            heroWidget.addEventListener('mousemove', (e) => {
+                const rect = heroWidget.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                heroSpotlight.style.setProperty('--x', `${x}px`);
+                heroSpotlight.style.setProperty('--y', `${y}px`);
+            });
+            // Touch support for mobile spotlight
+            heroWidget.addEventListener('touchmove', (e) => {
+                const rect = heroWidget.getBoundingClientRect();
+                const x = e.touches[0].clientX - rect.left;
+                const y = e.touches[0].clientY - rect.top;
+                heroSpotlight.style.setProperty('--x', `${x}px`);
+                heroSpotlight.style.setProperty('--y', `${y}px`);
+            });
+        }
+
+        // 5. Canvas Particles (Atmospheric Float)
+        const canvas = document.getElementById('heroCanvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            
+            function resizeCanvas() {
+                canvas.width = heroWidget.offsetWidth;
+                canvas.height = heroWidget.offsetHeight;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 2 + 0.5;
+                    this.speedX = Math.random() * 0.5 - 0.25;
+                    this.speedY = Math.random() * 0.5 - 0.25;
+                    this.opacity = Math.random() * 0.5 + 0.1;
+                }
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    if (this.x > canvas.width) this.x = 0;
+                    if (this.x < 0) this.x = canvas.width;
+                    if (this.y > canvas.height) this.y = 0;
+                    if (this.y < 0) this.y = canvas.height;
+                }
+                draw() {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            function initParticles() {
+                particles = [];
+                for (let i = 0; i < 25; i++) {
+                    particles.push(new Particle());
+                }
+            }
+            initParticles();
+
+            function animateParticles() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => { p.update(); p.draw(); });
+                requestAnimationFrame(animateParticles);
+            }
+            animateParticles();
+        }
+
+        // --- END ANIMATION UTILS ---
+
+        // 1. CONFIG SERVICE
+        async function loadAppConfig() {
+            try {
+                // Fetch Branding
+                const brandSnap = await getDoc(doc(db, "settings", "branding"));
+                if (brandSnap.exists()) {
+                    const data = brandSnap.data();
+                    appConfig.appName = data.appName || 'Hatua Recruitment';
+                    appConfig.branding = data;
+
+                    document.title = `Dashboard | ${appConfig.appName}`;
+                    headerAppName.textContent = appConfig.appName;
+                    footerBrand.textContent = appConfig.appName;
+                    
+                    if(data.primaryColor) {
+                        document.documentElement.style.setProperty('--primary-dark', data.primaryColor);
+                    }
+                    if(data.fontFamily) document.documentElement.style.setProperty('--font-main', `${data.fontFamily}, sans-serif`);
+                }
+
+                // Fetch Landing Config
+                const landingSnap = await getDoc(doc(db, "settings", "landing_page"));
+                if (landingSnap.exists()) {
+                    const data = landingSnap.data();
+                    appConfig.testimonials = data.enableTestimonials;
+                    if(data.enableTestimonials) testimonialsSection.style.display = 'block';
+                }
+
+                // Fetch General Config
+                const genSnap = await getDoc(doc(db, "settings", "general"));
+                if (genSnap.exists()) {
+                    copyrightName.textContent = genSnap.data().footerCopyright || `${appConfig.appName}`;
+                    
+                    if (genSnap.data().socialLinks) {
+                        try {
+                            const socials = JSON.parse(genSnap.data().socialLinks);
+                            let html = '';
+                            socials.forEach(s => {
+                                let iconClass = 'fas fa-link';
+                                if(s.platform.toLowerCase().includes('face')) iconClass = 'fab fa-facebook-f';
+                                if(s.platform.toLowerCase().includes('twit') || s.platform.includes('x')) iconClass = 'fab fa-twitter';
+                                if(s.platform.toLowerCase().includes('insta')) iconClass = 'fab fa-instagram';
+                                if(s.platform.toLowerCase().includes('link')) iconClass = 'fab fa-linkedin-in';
+                                html += `<a href="${s.url}" class="social-icon" target="_blank"><i class="${iconClass}"></i></a>`;
+                            });
+                            socialLinksContainer.innerHTML = html;
+                        } catch(e) { console.warn("Invalid Social JSON"); }
+                    }
+                }
+
+            } catch (e) { console.error("Config Sync Error", e); }
+        }
+
+        // 2. AUTH & INIT
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                const firstName = user.displayName ? user.displayName.split(' ')[0] : "Member";
+                const initial = firstName.charAt(0).toUpperCase();
+                
+                // Dashboard Header - Staggered Text Reveal
+                userNameEl.classList.remove('skeleton');
+                userNameEl.style.minWidth = '0';
+                userNameEl.textContent = firstName;
+                
+                // Trigger Text Animations
+                setTimeout(() => {
+                    document.getElementById('revealHello').classList.add('reveal-active');
+                    userNameEl.classList.add('reveal-active');
+                }, 200);
+
+                // Scramble Labels
+                document.querySelectorAll('.scramble-text').forEach(el => {
+                   scrambleText(el, el.innerText); 
+                });
+
+                // Drawer Info
+                drawerName.textContent = user.displayName || "Member";
+                drawerAvatar.textContent = initial;
+
+                document.getElementById('copyrightYear').textContent = new Date().getFullYear();
+
+                // Animate Progress Bar (Liquid)
+                setTimeout(() => { profileProgressFill.style.width = '70%'; }, 500);
+
+                await loadAppConfig();
+                await loadSavedJobs(user.uid);
+
+                await Promise.all([
+                    fetchRecentJobs(),
+                    fetchUserActivity(user.uid),
+                    setupNotificationListener(user.uid),
+                    setupSupportListener(user.uid)
+                ]);
+
+                if(appConfig.testimonials) fetchTestimonials();
+
+                pageLoader.style.opacity = '0';
+                setTimeout(() => pageLoader.style.display = 'none', 500);
+            } else {
+                window.location.href = "signin.html";
+            }
+        });
+
+        async function loadSavedJobs(uid) {
+            try {
+                const docSnap = await getDoc(doc(db, "users", uid));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    savedJobIds = data.savedJobs || [];
+                    // Rolling Counter
+                    animateCounter(savedCountHero, savedJobIds.length);
+                } else {
+                    savedCountHero.textContent = '0';
+                }
+            } catch (e) { console.error("Error loading saved jobs", e); }
+        }
+
+        // 3. FETCH TESTIMONIALS
+        async function fetchTestimonials() {
+            try {
+                const landingSnap = await getDoc(doc(db, "settings", "landing_page"));
+                const limitCount = landingSnap.exists() ? (landingSnap.data().testimonialsLimit || 5) : 5;
+
+                const q = query(collection(db, "testimonials"), orderBy("date", "desc"), limit(limitCount));
+                const snapshot = await getDocs(q);
+
+                if (snapshot.empty) {
+                    testimonialTrack.innerHTML = '<div style="padding:20px; color:#94a3b8;">No stories yet.</div>';
+                    return;
+                }
+
+                let itemsHTML = '';
+                snapshot.forEach(doc => {
+                    const t = doc.data();
+                    const initial = t.name ? t.name.charAt(0).toUpperCase() : 'U';
+                    const html = `
+                        <div class="t-card">
+                            <div class="t-header">
+                                <div class="t-avatar">${initial}</div>
+                                <div class="t-info"><h4>${t.name}</h4><span>User</span></div>
+                            </div>
+                            <div class="t-body">"${t.testimony}"</div>
+                        </div>
+                    `;
+                    itemsHTML += html;
+                });
+                // Duplicate for infinite loop illusion
+                testimonialTrack.innerHTML = itemsHTML + itemsHTML; 
+            } catch (e) { console.error("Testimonial Error", e); }
+        }
+
+        // 4. FETCH JOBS (With 3D Card Style)
+        function timeSince(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            let interval = seconds / 31536000;
+            if (interval > 1) return Math.floor(interval) + " years ago";
+            interval = seconds / 2592000;
+            if (interval > 1) return Math.floor(interval) + " months ago";
+            interval = seconds / 86400;
+            if (interval > 1) return Math.floor(interval) + " days ago";
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + " hours ago";
+            return "Just now";
+        }
+
+        async function fetchRecentJobs() {
+            try {
+                const q = query(collection(db, "jobs"), orderBy("createdAt", "desc"), limit(6));
+                const querySnapshot = await getDocs(q);
+                
+                jobsContainer.innerHTML = '';
+
+                if(querySnapshot.empty) {
+                    jobsContainer.innerHTML = '<div class="empty-state">No active jobs found.</div>';
+                    return;
+                }
+
+                querySnapshot.forEach((doc) => {
+                    const job = doc.data();
+                    if (job.status === 'Closed') return;
+
+                    const jobId = doc.id;
+                    const postDate = job.createdAt ? new Date(job.createdAt.seconds * 1000) : new Date();
+                    const timeAgo = timeSince(postDate);
+                    
+                    const isSaved = savedJobIds.includes(jobId);
+                    const bookmarkIcon = isSaved ? 'fas fa-bookmark' : 'far fa-bookmark';
+                    const bookmarkClass = isSaved ? 'saved' : '';
+                    const companyInitial = job.company ? job.company.charAt(0).toUpperCase() : 'C';
+
+                    const isPaused = job.status === 'Paused' || job.applicationsEnabled === false;
+                    const applyBtnClass = isPaused ? 'btn-disabled' : 'btn-apply';
+                    const applyBtnText = isPaused ? 'Paused' : 'Apply';
+
+                    const cardHTML = `
+                        <div class="job-card">
+                            <div class="card-top">
+                                <div class="company-logo">${companyInitial}</div>
+                                <button class="bookmark-btn ${bookmarkClass}" onclick="toggleBookmark('${jobId}', this)">
+                                    <i class="${bookmarkIcon}"></i>
+                                </button>
+                            </div>
+                            
+                            <h3 class="job-title">${job.title}</h3>
+                            <div class="company-name">
+                                <i class="fas fa-building" style="font-size:0.8rem;"></i> ${job.company}
+                            </div>
+                            
+                            <div class="job-details-grid">
+                                <span class="detail-pill"><i class="fas fa-map-marker-alt"></i> ${job.city || 'Remote'}</span>
+                                <span class="detail-pill"><i class="fas fa-briefcase"></i> ${job.type || 'Full Time'}</span>
+                            </div>
+
+                            <div class="time-badge">
+                                <i class="far fa-clock"></i> ${timeAgo}
+                            </div>
+
+                            <div class="card-footer">
+                                <a href="job-details.html?id=${jobId}" class="btn-view">Details</a>
+                                <a href="apply.html?id=${jobId}" class="${applyBtnClass}">${applyBtnText}</a>
+                            </div>
+                        </div>
+                    `;
+                    jobsContainer.insertAdjacentHTML('beforeend', cardHTML);
+                });
+            } catch (error) { console.error("Error loading jobs:", error); }
+        }
+
+        // 5. BOOKMARK LOGIC
+        window.toggleBookmark = async (jobId, btn) => {
+            if(!currentUser) return;
+            const icon = btn.querySelector('i');
+            const isSaved = btn.classList.contains('saved');
+
+            if(isSaved) {
+                btn.classList.remove('saved');
+                icon.className = 'far fa-bookmark';
+                showToast("Removed from saved");
+                savedJobIds = savedJobIds.filter(id => id !== jobId);
+            } else {
+                btn.classList.add('saved');
+                icon.className = 'fas fa-bookmark';
+                showToast("Job saved");
+                savedJobIds.push(jobId);
+            }
+            // Update hero stat dynamically with counter animation
+            animateCounter(savedCountHero, savedJobIds.length);
+
+            try {
+                const userRef = doc(db, "users", currentUser.uid);
+                if (isSaved) {
+                    await updateDoc(userRef, { savedJobs: arrayRemove(jobId) });
+                } else {
+                    await updateDoc(userRef, { savedJobs: arrayUnion(jobId) });
+                }
+            } catch (e) { console.error("Bookmark Error", e); }
+        };
+
+        function showToast(msg) {
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> <span>${msg}</span>`;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // 6. FETCH ACTIVITY
+        async function fetchUserActivity(userId) {
+            try {
+                const q = query(collection(db, "applications"), where("userId", "==", userId), orderBy("appliedAt", "desc"), limit(3));
+                const querySnapshot = await getDocs(q);
+                
+                // Update hero stat
+                appliedCountHero.textContent = querySnapshot.size; 
+                activityBody.innerHTML = '';
+
+                if(querySnapshot.empty) {
+                    activityBody.innerHTML = '<tr><td colspan="3" class="empty-state">No recent activity found.</td></tr>';
+                    return;
+                }
+
+                querySnapshot.forEach((doc) => {
+                    const app = doc.data();
+                    const date = app.appliedAt ? new Date(app.appliedAt.seconds * 1000).toLocaleDateString() : '-';
+                    let badgeClass = 'status-neutral';
+                    if(app.status === 'Shortlisted') badgeClass = 'status-success';
+                    if(app.status === 'Rejected') badgeClass = 'status-danger';
+                    if(app.status === 'Pending') badgeClass = 'status-warning';
+
+                    const rowHTML = `
+                        <tr>
+                            <td><strong>${app.jobTitle}</strong><br><small style="color:#64748b;">${app.companyName || ''}</small></td>
+                            <td>${date}</td>
+                            <td><span class="status-badge ${badgeClass}">${app.status || 'Received'}</span></td>
+                        </tr>
+                    `;
+                    activityBody.insertAdjacentHTML('beforeend', rowHTML);
+                });
+            } catch (error) { console.error("Error loading activity:", error); }
+        }
+
+        // 7. NOTIFICATIONS
+        function setupNotificationListener(userId) {
+            getDoc(doc(db, "settings", "notifications")).then(snap => {
+                if(snap.exists() && snap.data().killSwitch) return;
+
+                const q = query(collection(db, "notifications"), where("userId", "==", userId), where("read", "==", false));
+                onSnapshot(q, (snapshot) => {
+                    const count = snapshot.size;
+                    // Animate counter for alerts
+                    animateCounter(unreadCountHero, count);
+                    
+                    if(count > 0) {
+                        menuBadge.classList.add('show'); // Red dot on hamburger
+                        drawerAlertBadge.textContent = count > 9 ? '9+' : count;
+                        drawerAlertBadge.classList.add('show');
+                    } else {
+                        menuBadge.classList.remove('show');
+                        drawerAlertBadge.classList.remove('show');
+                    }
+                });
+            });
+        }
+
+        // 8. INTELLIGENT SUPPORT LISTENER
+        function setupSupportListener(userId) {
+            // ONLY check for tickets that have unread ADMIN messages
+            const q = query(collection(db, "support_tickets"), where("userId", "==", userId), where("hasUnreadUser", "==", true));
+            onSnapshot(q, (snapshot) => {
+                const count = snapshot.size;
+                if(count > 0) {
+                    supportBadge.textContent = count;
+                    supportBadge.classList.add('show');
+                } else {
+                    supportBadge.classList.remove('show');
+                }
+            });
+        }
+
+        // 9. DRAWER & LOGOUT LOGIC
+        function toggleDrawer() {
+            sideDrawer.classList.toggle('active');
+            menuOverlay.classList.toggle('active');
+        }
+
+        function closeDrawer() {
+            sideDrawer.classList.remove('active');
+            menuOverlay.classList.remove('active');
+        }
+
+        menuTrigger.addEventListener('click', toggleDrawer);
+        menuOverlay.addEventListener('click', closeDrawer);
+        
+        // Auto-close drawer when clicking any link inside
+        sideDrawer.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', closeDrawer);
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            await signOut(auth);
+            window.location.href = "signin.html";
+        });
+
+        // Header & Floating Button Auto-Hide Scroll Logic
+        const header = document.getElementById('header');
+        const floatingSupportBtn = document.getElementById('floatingSupportBtn');
+        let lastScroll = 0;
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            
+            if (currentScroll <= 0) {
+                // At top
+                header.classList.remove('hidden');
+                floatingSupportBtn.classList.remove('hidden');
+            } else {
+                if (currentScroll > lastScroll && currentScroll > 60) {
+                    // Scrolling Down -> Hide
+                    header.classList.add('hidden');
+                    floatingSupportBtn.classList.add('hidden');
+                } else {
+                    // Scrolling Up -> Show
+                    header.classList.remove('hidden');
+                    floatingSupportBtn.classList.remove('hidden');
+                }
+            }
+            lastScroll = currentScroll;
+        });
+
+    </script>
+</body>
+</html>
